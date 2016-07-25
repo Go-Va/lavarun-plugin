@@ -1,0 +1,4 @@
+name: LavaRun
+version: ${version}
+main: net.wesjd.lavarun.plugin.Main
+authors: [WesJD, TheMrGong]
