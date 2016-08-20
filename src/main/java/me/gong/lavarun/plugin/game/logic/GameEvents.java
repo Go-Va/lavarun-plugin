@@ -258,7 +258,8 @@ public class GameEvents implements Listener {
                         }.runTask(InManager.get().getInstance(Main.class));
 
 
-                        Bukkit.broadcastMessage(ChatColor.GREEN + p.getName() + " was killed by " + ev.getDamager().getName() + ".");
+                        Bukkit.broadcastMessage(currentArena.getTeam(p).getColor() + p.getName() + " was killed by " +
+                                currentArena.getTeam((Player) ev.getDamager()) +ev.getDamager().getName() + ".");
                     }
                 }
             } else ev.setCancelled(true);

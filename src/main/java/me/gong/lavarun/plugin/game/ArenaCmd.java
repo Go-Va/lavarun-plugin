@@ -6,15 +6,10 @@ import me.gong.lavarun.plugin.arena.ArenaCreator;
 import me.gong.lavarun.plugin.command.Cmd;
 import me.gong.lavarun.plugin.command.annotation.Command;
 import me.gong.lavarun.plugin.command.annotation.SubCommand;
-import me.gong.lavarun.plugin.scoreboard.ScoreboardHandler;
-import me.gong.lavarun.plugin.scoreboard.ScoreboardManager;
 import me.gong.lavarun.plugin.shop.ShopManager;
-import org.apache.commons.lang3.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-import java.util.Random;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 public class ArenaCmd implements Cmd {

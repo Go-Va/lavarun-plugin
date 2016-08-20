@@ -68,9 +68,7 @@ public class ShopArea {
     public boolean isStandingOn(Player player, Location location) {
 
         Location at = player.getLocation();
-        AxisAlignedBB b = new AxisAlignedBB(location.getX(), location.getY(), location.getZ(),
-                location.getX() + 1, location.getY() + 2, location.getZ() + 1);
-        return b.isVecAlmostInside(new Vec3d(at.getX(), at.getY(), at.getZ()));
+        return at.getBlock().getLocation().equals(location.getBlock().getLocation());
     }
 
     public boolean isStandingOnEnter(Player player) {
@@ -94,7 +92,6 @@ public class ShopArea {
                 pressurePlateState.put(player.getUniqueId(), true);
                 player.teleport(createTeleport(enterArea, player));
             }
-            powerupState.remove(player.getUniqueId());
         } else {
             pressurePlateState.remove(player.getUniqueId());
 

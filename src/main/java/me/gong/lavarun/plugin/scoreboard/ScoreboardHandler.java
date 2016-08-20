@@ -1,12 +1,9 @@
 package me.gong.lavarun.plugin.scoreboard;
 
 import com.google.common.base.Charsets;
-import com.mojang.authlib.GameProfile;
 import me.gong.lavarun.plugin.util.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.craftbukkit.v1_9_R2.CraftServer;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -124,8 +121,7 @@ public abstract class ScoreboardHandler {
                     if (team != null) team.unregister();
                     team = currentLocalScoreboard.registerNewTeam("BoardLine" + i);
 
-                    team.addPlayer(((CraftServer) Bukkit.getServer()).getOfflinePlayer(
-                            new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + color.toString()).getBytes(Charsets.UTF_8)), color.toString())));
+                    team.addEntry(color.toString());
                 }
             }
 

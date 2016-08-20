@@ -3,8 +3,7 @@ package me.gong.lavarun.plugin.game.scoreboard;
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.scoreboard.ScoreboardHandler;
-import org.apache.commons.lang3.StringUtils;
-import org.bukkit.ChatColor;
+import me.gong.lavarun.plugin.util.StringUtils;
 import org.bukkit.entity.Player;
 
 public class InGameBoard extends ScoreboardHandler {

@@ -114,6 +114,16 @@ public class StringUtils {
         System.out.println("### END " + o.getClass().getSimpleName().toUpperCase() + "###");
     }
 
+    public static String repeat(char var0, int var1) {
+        char[] var2 = new char[var1];
+
+        for(int var3 = var1 - 1; var3 >= 0; --var3) {
+            var2[var3] = var0;
+        }
+
+        return new String(var2);
+    }
+
     public static String format(String score) {
         return ChatColor.translateAlternateColorCodes('&', score);
     }
