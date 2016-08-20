@@ -1,9 +1,8 @@
 package me.gong.lavarun.plugin.game.scoreboard;
 
 import me.gong.lavarun.plugin.scoreboard.ScoreboardHandler;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 public class LobbyBoard extends ScoreboardHandler {
@@ -13,7 +12,7 @@ public class LobbyBoard extends ScoreboardHandler {
     }
     @Override
     protected void build(Player p) {
-        setScore("&l&m"+ StringUtils.repeat('-', 28));
+        setScore("&l&m"+ StringUtils.repeat("-", 28));
         setScore("&7Current arena: &aArena");
         setScore(null);
         setScore("&7Players: &e"+ Bukkit.getOnlinePlayers().size());

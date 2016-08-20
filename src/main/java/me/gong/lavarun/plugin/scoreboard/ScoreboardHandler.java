@@ -1,6 +1,5 @@
 package me.gong.lavarun.plugin.scoreboard;
 
-import com.google.common.base.Charsets;
 import me.gong.lavarun.plugin.util.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -10,7 +9,10 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author WesJD https://github.com/WesJD

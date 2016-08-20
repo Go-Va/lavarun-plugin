@@ -3,7 +3,7 @@ package me.gong.lavarun.plugin.game.scoreboard;
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.scoreboard.ScoreboardHandler;
-import me.gong.lavarun.plugin.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
 
 public class InGameBoard extends ScoreboardHandler {
@@ -18,7 +18,7 @@ public class InGameBoard extends ScoreboardHandler {
     protected void build(Player p) {
         GameManager m = InManager.get().getInstance(GameManager.class);
         if(!m.isInGame()) return;
-        ;
+        
         setScore(null);
         setScore("&7Playing: &aArena");
         setScore(null);
@@ -34,10 +34,10 @@ public class InGameBoard extends ScoreboardHandler {
         if(!m.getCurrentArena().isPlaying(p, true)) setScore(null);
 
         if(m.getCurrentArena().isPlaying(p, true) && p.getFoodLevel() <= 7) {
-            setScore("&l&m"+ StringUtils.repeat('-', 4)+"&c Low Food&r&m"+StringUtils.repeat('-', 12));
+            setScore("&l&m"+ StringUtils.repeat("-", 4)+"&c Low Food&r&m"+StringUtils.repeat("-", 12));
 
         } else {
-            setScore("&l&m"+ StringUtils.repeat('-', 24));
+            setScore("&l&m"+ StringUtils.repeat("-", 24));
         }
 
         if(m.getCurrentArena().isPlaying(p, true)) {
@@ -63,7 +63,7 @@ public class InGameBoard extends ScoreboardHandler {
         if (m.getRedCaptureState() > 0) {
             int stateLeft = 5 - m.getRedCaptureState();
             setScore("  &d&l[!]&d Cap alert! &l[!]");
-            setScore("        &a&l"+StringUtils.repeat('=', m.getRedCaptureState())+"&7&l"+StringUtils.repeat('=', stateLeft));
+            setScore("        &a&l"+StringUtils.repeat("=", m.getRedCaptureState())+"&7&l"+StringUtils.repeat("=", stateLeft));
         }
     }
 
@@ -78,7 +78,7 @@ public class InGameBoard extends ScoreboardHandler {
         if (m.getBlueCaptureState() > 0) {
             int stateLeft = 5 - m.getBlueCaptureState();
             setScore("  &d&l[!]&d Cap alert! &l[!]");
-            setScore("        &a&l"+StringUtils.repeat('=', m.getBlueCaptureState())+"&7&l"+StringUtils.repeat('=', stateLeft));
+            setScore("        &a&l"+StringUtils.repeat("=", m.getBlueCaptureState())+"&7&l"+StringUtils.repeat("=", stateLeft));
         }
     }
 }
