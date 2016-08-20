@@ -68,7 +68,7 @@ public class ChunkDestroyAction implements BeamAction {
     }
     
     private void clearBox(Box box, Player player) {
-        box.getAxis().toLocations(getGame().getCurrentArena().getPlayArea().getWorld()).stream().filter(l -> getGame().getCurrentArena().isBlockInteractable(l, null, player, false)).forEach(l -> {
+        box.getAxis().toLocations(getGame().getCurrentArena().getPlayArea().getWorld()).stream().filter(l -> getGame().getCurrentArena().isBlockInteractable(l, null, player, true)).forEach(l -> {
             l.getBlock().setType(getGame().getCurrentArena().getLavaRegion().contains(l) ? Material.LAVA : Material.AIR);
         });
     }
