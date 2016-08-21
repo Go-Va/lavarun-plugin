@@ -47,7 +47,7 @@ public class WallerPowerup extends Powerup {
 
     @Override
     public int getCost() {
-        return 40;
+        return 60;
     }
 
     @EventHandler

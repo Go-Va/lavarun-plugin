@@ -122,12 +122,12 @@ public class Arena {
         return getRespawnData(player.getUniqueId());
     }
 
-    public GameManager.RespawnData createRespawnData(Player player) {
+    public GameManager.RespawnData createRespawnData(Player player, boolean isPlayer) {
         GameManager.RespawnData d;
         boolean add = false;
         if((d = getRespawnData(player)) == null) {
             add = true;
-            d = new GameManager.RespawnData(player.getUniqueId());
+            d = new GameManager.RespawnData(player.getUniqueId(), isPlayer);
         } else d.setInit(System.currentTimeMillis());
         if(add) respawnData.add(d);
         return d;
@@ -261,6 +261,16 @@ public class Arena {
 
     public Team getTeam(Player player) {
         return isPlaying(player, true) ? blue.isOnTeam(player) ? blue : red : null;
+    }
+
+    public Team getTeam(String name) {
+        switch (name.toLowerCase().replace(" ", "")) {
+            case "blue":
+                return blue;
+            case "red":
+                return red;
+            default: return null;
+        }
     }
 
     public Region getPlayArea() {

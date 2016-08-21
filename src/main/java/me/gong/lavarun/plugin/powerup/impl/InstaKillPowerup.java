@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -43,7 +44,7 @@ public class InstaKillPowerup extends Powerup {
 
     @Override
     public int getCost() {
-        return 20;
+        return 50;
     }
 
     @EventHandler
@@ -56,7 +57,10 @@ public class InstaKillPowerup extends Powerup {
                 onUse(dm);
 
                 if(ca.canBeDamaged(p, dm)) {
-                    ev.setDamage(p.getHealth());
+                    ev.setCancelled(true);
+                    m.handleAttack(p, dm);
+                    m.handleKill(p);
+
                     dm.getWorld().playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 2.0f, 0.0f);
                 }
             }

@@ -3,16 +3,18 @@ package me.gong.lavarun.plugin.game;
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.arena.Arena;
 import me.gong.lavarun.plugin.arena.ArenaCreator;
+import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.command.Cmd;
 import me.gong.lavarun.plugin.command.annotation.Command;
 import me.gong.lavarun.plugin.command.annotation.SubCommand;
 import me.gong.lavarun.plugin.shop.ShopManager;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.stream.Collectors;
 
-public class ArenaCmd implements Cmd {
+public class GameCommands implements Cmd {
 
     @Command(name = "game", help = "Main game command", alias = "g")
     public boolean onCmd(Player player, String[] args) {
@@ -96,6 +98,45 @@ public class ArenaCmd implements Cmd {
             }
             return true;
         } else return true;
+    }
+
+    @Command(name = "join", help = "Makes yourself join a team or another player", syntax = "<team, player> [team]")
+    public boolean onCmds(Player player, String[] args) {
+        if(hasPerms(player)) {
+            if(args.length < 1) return false;
+            GameManager gm = InManager.get().getInstance(GameManager.class);
+            if(!gm.isInGame()) player.sendMessage(ChatColor.RED+"No game is currently running");
+            else if(args.length == 1) {
+                //team
+                Team t = gm.getCurrentArena().getTeam(args[0]);
+                if(t == null) player.sendMessage(ChatColor.RED+"Invalid team name.");
+                else joinTeam(player, t);
+            } else {
+                String pl = args[1];
+                Player find = Bukkit.getOnlinePlayers().stream().filter(p -> p.getName().equalsIgnoreCase(pl)).findFirst().orElse(null);
+                if(find == null) player.sendMessage(ChatColor.RED+"No player by name of "+ChatColor.YELLOW+pl);
+                else {
+                    Team t = gm.getCurrentArena().getTeam(args[0]);
+                    if(t == null) player.sendMessage(ChatColor.RED+"Invalid team name.");
+                    else {
+                        joinTeam(find, t);
+                        if (!find.equals(player))
+                            player.sendMessage(ChatColor.GREEN+"Joined "+ChatColor.YELLOW+find.getName()+ChatColor.GREEN+" to "+t.getColor()+t.getName()+" team");
+                    }
+                }
+            }
+            return true;
+        } else return true;
+    }
+
+    public void joinTeam(Player player, Team team) {
+        GameManager gm = InManager.get().getInstance(GameManager.class);
+        Team curTeam = gm.getCurrentArena().getTeam(player);
+        if(curTeam != null) curTeam.removePlayer(player);
+        team.addPlayer(player);
+        gm.spawnPlayer(player, true);
+        team.giveKit(player);
+        player.sendMessage(ChatColor.GREEN+"You have joined "+team.getColor()+team.getName()+" team");
     }
 
 

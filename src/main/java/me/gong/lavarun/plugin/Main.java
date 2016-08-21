@@ -32,23 +32,22 @@ public class Main extends JavaPlugin {
     }
 
     public class Config {
-        private String username, password;
-        private int channel;
+        private String serverIP;
+        private int port;
 
         public Config() {
             saveDefaultConfig();
             loadConfig();
         }
 
-        public Config(String username, String password) {
-            this.username = username;
-            this.password = password;
+        public Config(String serverIP, int port) {
+            this.serverIP = serverIP;
+            this.port = port;
         }
 
         public void loadConfig() {
-            username = getConfig().getString("username");
-            password = getConfig().getString("password");
-            channel = getConfig().getInt("channel");
+            serverIP = getConfig().getString("serverIP");
+            port = getConfig().getInt("port");
         }
 
         public void reloadConfig() {
@@ -56,19 +55,13 @@ public class Main extends JavaPlugin {
             loadConfig();
         }
 
-        public String getUsername() {
-            return username;
+        public String getServerIP() {
+            return serverIP;
         }
 
-        public String getPassword() {
-            return password;
+        public int getPort() {
+            return port;
         }
-
-        public int getChannel() {
-            return channel;
-        }
-
-        //no saving
     }
     
     

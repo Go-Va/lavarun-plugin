@@ -29,7 +29,7 @@ public class ResupplyPowerup extends Powerup {
 
     @Override
     public int getCost() {
-        return 10;
+        return 15;
     }
 
 

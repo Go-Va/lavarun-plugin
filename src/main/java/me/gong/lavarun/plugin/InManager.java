@@ -1,9 +1,11 @@
 package me.gong.lavarun.plugin;
 
+import me.gong.lavarun.plugin.util.StringUtils;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 public class InManager {
     private static InManager instance = new InManager();
@@ -30,13 +32,13 @@ public class InManager {
     }
 
     public <T> T addInstance(T instance) {
+        getInstances().add(instance);
         if(!(instance instanceof JavaPlugin)) //boi
             try {
                 instance.getClass().getMethod("onEnable").invoke(instance);
             } catch (Exception ex) {
                 //no method
             }
-        getInstances().add(instance);
         return instance;
     }
 

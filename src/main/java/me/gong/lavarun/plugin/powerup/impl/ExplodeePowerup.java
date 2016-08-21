@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 public class ExplodeePowerup extends Powerup {
 
-    private Map<UUID, Long> trackedItems = new ConcurrentHashMap<>();
+    private Map<ItemData, Long> trackedItems = new ConcurrentHashMap<>();
     private String lastWorld;
 
     private static final long EXPLODE_AFTER = 5000;
@@ -59,7 +59,7 @@ public class ExplodeePowerup extends Powerup {
 
     @Override
     public int getCost() {
-        return 40;
+        return 80;
     }
 
     @EventHandler
@@ -74,7 +74,8 @@ public class ExplodeePowerup extends Powerup {
 
     @EventHandler
     public void onDie(EntityDamageEvent ev) {
-        if(trackedItems.containsKey(ev.getEntity().getUniqueId())) fireOff(ev.getEntity().getUniqueId());
+        ItemData d = getDataFor(ev.getEntity().getUniqueId());
+        if(d != null) fireOff(d);
     }
 
     @Timer(runEvery = 1)
@@ -82,15 +83,15 @@ public class ExplodeePowerup extends Powerup {
         trackedItems.forEach((id, time) -> {
             if(System.currentTimeMillis() - time >= EXPLODE_AFTER) {
                 trackedItems.remove(id);
-                Entity e = getEntityFor(id);
+                Entity e = getEntityFor(id.itemId);
                 if(e != null) {
-                    fireOff(e.getUniqueId());
+                    fireOff(id);
                 }
             } else {
                 long num = EXPLODE_AFTER - (System.currentTimeMillis() - time);
                 if(num % 1000 <= 500 + ((500 / num) * num)) {
 
-                    Entity e = getEntityFor(id);
+                    Entity e = getEntityFor(id.itemId);
 
                     if(e != null) {
                         e.getWorld().playSound(e.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 1.0f, 2.0f);
@@ -117,33 +118,38 @@ public class ExplodeePowerup extends Powerup {
         e.setVelocity(NumberUtils.getVectorForPlayer(player).multiply(0.85).add(new Vector(0, 0.43, 0)));
         e.setPickupDelay(200);
 
-        trackedItems.put(e.getUniqueId(), System.currentTimeMillis());
+        trackedItems.put(new ItemData(e.getUniqueId(), player.getUniqueId()), System.currentTimeMillis());
         lastWorld = e.getWorld().getName();
     }
 
 
 
-    public void fireOff(UUID uuid) {
-        Entity e = getEntityFor(uuid);
+    public void fireOff(ItemData data) {
+        Entity e = getEntityFor(data.itemId);
         if(e != null) {
             GameManager gm = InManager.get().getInstance(GameManager.class);
             e.remove();
             e.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, e.getLocation().add(0, 2, 0), 1, 0.0f, 0.0f, 0.0f, 0.0f);
             e.getWorld().playSound(e.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 2.0f, 0.0f);
-            NumberUtils.getSphere(e.getLocation(), 6).forEach(bl -> {
+            NumberUtils.getSphere(e.getLocation(), 5).forEach(bl -> {
                 if(gm.getCurrentArena().getPlayArea().contains(bl) || gm.getCurrentArena().getLavaRegion().contains(bl)) removeBlock(bl);
+                Player attack = Bukkit.getPlayer(data.playerId);
                 e.getWorld().getPlayers().stream().filter(pl -> LocationUtils.toBounding(pl)
+
                         .intersectsWith(new AxisAlignedBB(0, 0, 0, 1, 1, 1).offset(bl.getX(), bl.getY(), bl.getZ())))
                         .filter(b -> gm.getCurrentArena().isPlaying(b, true))
                         .forEach(b -> {
+                            if(attack != null) gm.handleAttack(b, attack);
                             b.setVelocity(b.getVelocity().add(b.getLocation().subtract(e.getLocation()).toVector().normalize()).normalize().multiply(1.2));
-                            b.damage((1 / 5) * b.getLocation().distance(e.getLocation()));
+                            b.damage(Math.max(0, 10 - ((int) b.getLocation().distance(e.getLocation()))));
                         });
             });
         }
     }
 
-
+    public ItemData getDataFor(UUID itemId) {
+        return trackedItems.keySet().stream().filter(k -> k.itemId.equals(itemId)).findFirst().orElse(null);
+    }
 
     private void removeBlock(Location location) {
         Block b = location.getBlock();
@@ -171,5 +177,14 @@ public class ExplodeePowerup extends Powerup {
         if(d != null)
         return d.getEntities().stream().filter(e -> e.getUniqueId().equals(uuid)).findFirst().orElse(null);
         else return null;
+    }
+
+    public class ItemData {
+        private UUID itemId, playerId;
+
+        public ItemData(UUID itemId, UUID playerId) {
+            this.itemId = itemId;
+            this.playerId = playerId;
+        }
     }
 }

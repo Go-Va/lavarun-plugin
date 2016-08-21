@@ -114,7 +114,6 @@ public abstract class ScoreboardHandler {
             if (objective == null) {
                 objective = currentLocalScoreboard.registerNewObjective(OBJECTIVE_NAME, "dummy");
                 objective.setDisplayName(StringUtils.format(displayName));
-                player.sendMessage("Set to sidebar bb!");
                 objective.setDisplaySlot(DisplaySlot.SIDEBAR);
                 for (int i = 0; i < colors.size(); i++) {
                     final ChatColor color = colors.get(i);
@@ -135,6 +134,7 @@ public abstract class ScoreboardHandler {
 
             for (org.bukkit.scoreboard.Team team : currentLocalScoreboard.getTeams()) {
                 try {
+                    if(!team.getName().contains("BoardLine")) continue;
                     int num = Integer.parseInt(team.getName().replace("BoardLine", ""));
                     if (num > currentLine) continue;
                     team.setPrefix("");

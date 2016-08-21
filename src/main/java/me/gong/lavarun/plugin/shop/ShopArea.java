@@ -2,6 +2,7 @@ package me.gong.lavarun.plugin.shop;
 
 import javafx.util.Pair;
 import me.gong.lavarun.plugin.InManager;
+import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.powerup.Powerup;
@@ -10,10 +11,7 @@ import me.gong.lavarun.plugin.util.AxisAlignedBB;
 import me.gong.lavarun.plugin.util.BlockUtils;
 import me.gong.lavarun.plugin.util.JSONUtils;
 import me.gong.lavarun.plugin.util.Vec3d;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -53,7 +51,7 @@ public class ShopArea {
         powerupPurchase.entrySet().forEach(e -> ret.put(getPowerupManager().getPowerup(e.getKey()), e.getValue()));
         return ret;
     }
-    
+
     public Powerup getStandingOnPowerup(Player player) {
         Map.Entry<Powerup, Location> entry = getPowerupPurchase().entrySet().stream()
                 .filter(p -> isStandingOn(player, p.getValue()))
@@ -64,7 +62,7 @@ public class ShopArea {
     public Location getPowerupLocation(Powerup powerup) {
         return getPowerupPurchase().get(powerup);
     }
-    
+
     public boolean isStandingOn(Player player, Location location) {
 
         Location at = player.getLocation();
@@ -81,16 +79,18 @@ public class ShopArea {
 
     public void update(Player player) {
         boolean enter = isStandingOnEnter(player), exit = isStandingOnExit(player);
-
+        Vector v = player.getVelocity();
         if(enter || exit) {
             if (pressurePlateState.containsKey(player.getUniqueId())) {
                 pressurePlateState.put(player.getUniqueId(), !enter);
             } else if (enter) {
                 pressurePlateState.put(player.getUniqueId(), false);
                 player.teleport(createTeleport(exitArea, player));
+                Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), () -> player.setVelocity(v));
             } else {
                 pressurePlateState.put(player.getUniqueId(), true);
                 player.teleport(createTeleport(enterArea, player));
+                Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), () -> player.setVelocity(v));
             }
         } else {
             pressurePlateState.remove(player.getUniqueId());
@@ -121,10 +121,11 @@ public class ShopArea {
 
     private Location createTeleport(Location location, Player player) {
         Location mE = location.clone();
-        mE.add(0.5, 0, 0.5);
+
         mE.setYaw(player.getLocation().getYaw());
         mE.setPitch(player.getLocation().getPitch());
-        return mE;
+        Location dif = location.getBlock().getLocation().subtract(player.getLocation().getBlock().getLocation());
+        return player.getLocation().add(dif);
     }
 
     public void resetStates() {

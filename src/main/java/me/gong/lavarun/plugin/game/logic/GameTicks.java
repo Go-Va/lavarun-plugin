@@ -76,17 +76,15 @@ public class GameTicks {
                         gm.spawnPlayer(p, false);
                         p.getInventory().clear();
                     });
+                    String capturer = gm.redCaptureState > 5 ? "Red" : "Blue", loser = gm.redCaptureState > 5 ? "Blue" : "Red";
                     Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), () -> {
-                        String capturer = gm.redCaptureState > 5 ? "Red" : "Blue", loser = gm.redCaptureState > 5 ? "Blue" : "Red";
                         Bukkit.getOnlinePlayers().stream()
                                 .filter(p -> !currentArena.isPlaying(p, true) || currentArena.getTeam(p).getName().equalsIgnoreCase(capturer))
-                                .forEach(p -> {
-                                    p.playSound(p.getLocation(), Sound.ENTITY_WOLF_AMBIENT, 2.0f, 1.75f);
-                                });
+                                .forEach(p -> p.playSound(p.getLocation(), Sound.ENTITY_WOLF_AMBIENT, 2.0f, 1.75f));
 
                         Bukkit.getOnlinePlayers().stream()
                                 .filter(p -> currentArena.getTeam(p).getName().equalsIgnoreCase(loser))
-                                .forEach(p -> p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 2.0f, 0.6f));
+                                .forEach(p -> p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 2.0f, 0.9f));
                     });
                 }
                 if(gm.redCaptureState > 0) gm.setLastRedCap();
@@ -108,15 +106,17 @@ public class GameTicks {
     }
 
     @Timer(runEvery = 1)
-    public void respawnTick() {
+    public void fastTick() {
         GameManager gm = InManager.get().getInstance(GameManager.class);
         if(!gm.isInGame()) return;
+        gm.invalidateAttackData();
 
         for(GameManager.RespawnData d : gm.getCurrentArena().getRespawnData()) {
             if(d.getPlayer() == null) gm.getCurrentArena().removeRespawnData(d.getUUID());
             else if(d.shouldRespawn()) {
                 gm.getCurrentArena().removeRespawnData(d.getUUID());
                 gm.spawnPlayer(d.getPlayer(), false);
+                gm.getCurrentArena().getTeam(d.getPlayer()).addDamageCooldown(d.getPlayer());
                 BukkitUtils.Title t = new BukkitUtils.Title("&a&lYou have respawned", true, 0, 15, 1);
                 t.sendTo(d.getPlayer());
             } else gm.sendRespawnTitleTo(d.getPlayer());

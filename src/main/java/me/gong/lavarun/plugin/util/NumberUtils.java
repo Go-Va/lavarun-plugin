@@ -5,6 +5,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.HashSet;
 import java.util.Random;
@@ -12,10 +13,15 @@ import java.util.Set;
 
 public class NumberUtils {
     public static Random random = new Random();
+    public static SecureRandom secureRandom = new SecureRandom();
 
 
     public static int getRandom(int min, int max) {
         return random.nextInt((max - min) + 1) + min;
+    }
+
+    public static int getSecureRandom(int min, int max) {
+        return secureRandom.nextInt((max - min) + 1) + min;
     }
 
     public static void knockEntity(Vector from, Entity e, float knockback) {

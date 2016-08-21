@@ -3,6 +3,9 @@ package me.gong.lavarun.plugin.beam;
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.beam.actions.*;
+import me.gong.lavarun.plugin.beam.oauth.AuthResponse;
+import me.gong.lavarun.plugin.beam.oauth.OAuthListener;
+import me.gong.lavarun.plugin.beam.oauth.OAuthManager;
 import me.gong.lavarun.plugin.command.CommandManager;
 import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.game.events.GameBeginEvent;
@@ -15,32 +18,44 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import pro.beam.api.BeamAPI;
+import pro.beam.api.services.impl.UsersService;
 import pro.beam.interactive.net.packet.Protocol;
 import pro.beam.interactive.robot.Robot;
 import pro.beam.interactive.robot.RobotBuilder;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 
 public class BeamManager implements Listener {
 
-    private BeamAPI api;
-    private Robot robot;
+    public static final String LAVA_RUN_SERVICE = "https://server.savikin.me/lavarunlive.php?username=%username&port=%port&confirmation=%confirm&ip=%ip";
+
+    private BeamConfiguration configuration;
     private List<Protocol.ProgressUpdate.TactileUpdate.Builder> tasks;
+    private OAuthManager oauth;
+
     private List<UUID> streamers;
+
     private List<BeamAction> actions;
     private List<BeamState> states;
     private boolean disabling;
 
     public BeamManager() {
-        api = new BeamAPI();
         actions = new ArrayList<>();
         streamers = new ArrayList<>();
-        tasks = new CopyOnWriteArrayList<>();
         states = new ArrayList<>();
+
+        tasks = new CopyOnWriteArrayList<>();
+
+        oauth = new OAuthManager();
+        oauth.onEnable(InManager.get().getInstance(Main.Config.class));
 
         Bukkit.getPluginManager().registerEvents(this, InManager.get().getInstance(Main.class));
         InManager.get().getInstance(CommandManager.class).addAllCommands(new BeamCmd());
@@ -49,15 +64,12 @@ public class BeamManager implements Listener {
         reloadRobot();
     }
 
-    private void createRobot(Main.Config config) throws Exception {
+    private void createRobot(BeamConfiguration configuration) throws Exception {
 
         if(disabling) return;
-        if(robot != null) {
-            robot.close();
-            robot = null;
-        }
-        robot = new RobotBuilder().username(config.getUsername()).password(config.getPassword()).channel(config.getChannel()).build(api).get();
-        robot.on(Protocol.Report.class, report -> {
+        if(this.configuration != null) this.configuration.robot.close();
+        this.configuration = configuration;
+        this.configuration.robot.on(Protocol.Report.class, report -> {
             if(disabling || report == null) return;
             try {
                 List<Protocol.Report.TactileInfo> tacs = report.getTactileList();
@@ -98,7 +110,7 @@ public class BeamManager implements Listener {
                         progress.addTactile(task);
                     }
                 }
-                if (progress.getTactileCount() > 0 && robot != null) robot.write(progress.build());
+                if (progress.getTactileCount() > 0 && this.configuration != null) this.configuration.robot.write(progress.build());
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -129,6 +141,23 @@ public class BeamManager implements Listener {
 
     private void resetButtons() {
         states.forEach(BeamState::reset);
+    }
+
+    public boolean isInteractiveConnected() {
+        return configuration != null;
+    }
+
+    public void endInteractive() {
+        if(configuration != null) {
+            configuration.robot.close();
+            configuration = null;
+        }
+    }
+
+    public void useConfiguration(BeamConfiguration beamConfiguration) {
+        if(configuration != null) configuration.robot.close();
+        this.configuration = beamConfiguration;
+        reloadRobot();
     }
 
     public boolean hasUpdate(Protocol.ProgressUpdate.TactileUpdate.Builder b) {
@@ -212,11 +241,12 @@ public class BeamManager implements Listener {
         resetButtons();
         tasks.clear();
         c.reloadConfig();
-        try {
-            createRobot(c);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        if(configuration != null)
+            try {
+                createRobot(configuration);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
     }
 
     public boolean toggleStreaming(Player player) {
@@ -226,9 +256,14 @@ public class BeamManager implements Listener {
         } else return streamers.add(player.getUniqueId());
     }
 
+    public OAuthManager getOAuthManager() {
+        return oauth;
+    }
+
     public void onDisable() {
         disabling = true;
-        if(robot != null) robot.close();
+        endInteractive();
+        oauth.onDisable();
     }
 
     @EventHandler
@@ -306,13 +341,19 @@ public class BeamManager implements Listener {
         }
     }
 
-    public class BeamConfiguration {
-        private int channelId;
-        private String oauth;
+    public static class BeamConfiguration {
+        private BeamAPI api;
+        private Robot robot;
 
-        public BeamConfiguration(int channelId, String oauth) {
-            this.channelId = channelId;
-            this.oauth = oauth;
+        public BeamConfiguration(AuthResponse response) {
+            this.api = new BeamAPI(response.token);
+            try {
+                robot = new RobotBuilder().channel(api.use(UsersService.class).getCurrent().get().channel).build(api).get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
         }
+
+
     }
 }

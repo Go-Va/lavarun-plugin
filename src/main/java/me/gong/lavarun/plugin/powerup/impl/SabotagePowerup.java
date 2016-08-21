@@ -44,7 +44,7 @@ public class SabotagePowerup extends Powerup {
 
     @Override
     public int getCost() {
-        return 30;
+        return 40;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)

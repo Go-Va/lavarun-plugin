@@ -11,6 +11,8 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.ScoreboardManager;
 import org.json.simple.JSONObject;
 
 import java.util.*;
@@ -65,6 +67,18 @@ public class Team {
         return BukkitUtils.create1_8Pvp(s);
     }
 
+    private org.bukkit.scoreboard.Team getOrRegister(Player player) {
+        Scoreboard s = player.getScoreboard();
+        org.bukkit.scoreboard.Team t;
+        if((t = s.getTeam(getName())) == null) {
+            t = s.registerNewTeam(getName());
+            t.setPrefix(getColor().toString());
+            t.setOption(org.bukkit.scoreboard.Team.Option.COLLISION_RULE, org.bukkit.scoreboard.Team.OptionStatus.FOR_OWN_TEAM);
+
+        }
+        return t;
+    }
+
     public ItemStack getGlass(Player player) {
         ItemStack ret = new ItemStack(Material.STAINED_GLASS, 64, glassColor);
         ItemMeta m = ret.getItemMeta();
@@ -98,7 +112,7 @@ public class Team {
         return captureRegion;
     }
 
-    public void onRespawn(Player player) {
+    public void addDamageCooldown(Player player) {
         if(!isOnTeam(player)) return;
         lastRespawn.put(player.getUniqueId(), System.currentTimeMillis());
     }
@@ -126,11 +140,27 @@ public class Team {
 
     public void addPlayer(Player player) {
         players.add(player.getUniqueId());
+        addToTeam(player.getName());
     }
 
     public void removePlayer(Player player) {
         players.remove(player.getUniqueId());
         lastRespawn.remove(player.getUniqueId());
+        removeFromTeam(player.getName());
+    }
+
+    public void addToTeam(String player) {
+        Bukkit.getOnlinePlayers().forEach(o -> {
+            org.bukkit.scoreboard.Team team = getOrRegister(o);
+            team.addEntry(player);
+        });
+    }
+
+    public void removeFromTeam(String player) {
+        Bukkit.getOnlinePlayers().forEach(o -> {
+            org.bukkit.scoreboard.Team team = getOrRegister(o);
+            team.removeEntry(player);
+        });
     }
 
     public void updateShop(Player player) {
@@ -142,6 +172,11 @@ public class Team {
     }
 
     public void resetTeam() {
+
+        players.forEach(p -> {
+            Player pl = Bukkit.getPlayer(p);
+            if(pl != null) removeFromTeam(pl.getName());
+        });
         players.clear();
         shopArea.resetStates();
         lastRespawn.clear();

@@ -36,7 +36,7 @@ public class RestoreHungerAction implements BeamAction {
     }
 
     public Player getTarget() {
-        return getGame().isInGame() ? getTargets().get(NumberUtils.random.nextInt(getTargets().size())) : null;
+        return getGame().isInGame() && getTargets().size() > 0 ? getTargets().get(NumberUtils.random.nextInt(getTargets().size())) : null;
     }
 
     @Override

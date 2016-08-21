@@ -14,20 +14,20 @@ import me.gong.lavarun.plugin.game.scoreboard.LobbyBoard;
 import me.gong.lavarun.plugin.powerup.PowerupManager;
 import me.gong.lavarun.plugin.scoreboard.ScoreboardHandler;
 import me.gong.lavarun.plugin.scoreboard.ScoreboardManager;
+import me.gong.lavarun.plugin.shop.ShopManager;
 import me.gong.lavarun.plugin.timer.Timers;
 import me.gong.lavarun.plugin.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GameManager implements Listener {
@@ -48,30 +48,41 @@ public class GameManager implements Listener {
             "%player, there are other ways to die other than %death.",
             "Are you proud of your accomplishment %player? Dieing to %death is really hard.",
             "Embarrassing death is embarrassing. [%player rick-rolled by %death]",
-            "Well shucks, %player died to %death."};
+            "Well shucks, %player died to %death.",
+            "Rip. "+ Calendar.getInstance().get(Calendar.MONTH)+ " %player died to %death",
+            "Hahahaha. +1 to %death, get your act together %player",
+            "That was fun %player, I bet %death enjoyed it.",
+            "%player, I'm not sassy, I'm a conversationalist. Also, watch out for %death next time."};
 
-    public static final long RESPAWN_TIME = 1000 * 10;
+    public static final String[] BY_PLAYER = new String[] {"%victim was murdered gruesomely by %damager",
+            "The savage %damager killed %victim", "%victim destroyed by %damager!", "Oh, oh OH! %victim SHREKT by %damager!",
+            "%victim needs a break from %damager.", "%damager is not letting %victim have a good day",
+            "%victim, at least a player (%damager) killed you. You could've died to lava.", "%victim, try not to get on %damager's bad side next time",
+            "Try combating %damager with some powerups, %victim!"};
+
+    public static final long RESPAWN_TIME_PLAYER = 1000 * 10, RESPAWN_TIME_STUPID = 1000 * 4, ATTACK_CACHE_TIME = 1000 * 3;
 
     private List<Arena> arenas;
     private Arena currentArena;
-    private boolean inGame;
-    private boolean redReady, blueReady;
+    private boolean inGame, redReady, blueReady;
 
     public int redCaptureState, blueCaptureState, redCapAmount, blueCapAmount;
     private long lastRedCap, lastBlueCap;
     private File saveFile;
     private List<Material> foods = new ArrayList<>();
+    private List<AttackData> attackData;
     private ScoreboardHandler inGameBoard, lobbyBoard;
 
     public GameManager() {
         inGameBoard = new InGameBoard();
         lobbyBoard = new LobbyBoard();
+        attackData = new CopyOnWriteArrayList<>();
         foods.add(Material.COOKED_FISH);
         foods.add(Material.BREAD);
         foods.add(Material.APPLE);
         foods.add(Material.GOLDEN_CARROT);
 
-        InManager.get().getInstance(CommandManager.class).addAllCommands(new ArenaCmd());
+        InManager.get().getInstance(CommandManager.class).addAllCommands(new GameCommands());
         arenas = new ArrayList<>();
         File dataFolder = InManager.get().getInstance(Main.class).getDataFolder();
         if(!dataFolder.exists()) dataFolder.mkdir();
@@ -81,6 +92,9 @@ public class GameManager implements Listener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void onEnable() {
         Timers.register(new GameTicks());
         Bukkit.getPluginManager().registerEvents(new GameEvents(), InManager.get().getInstance(Main.class));
         loadArenas();
@@ -148,8 +162,8 @@ public class GameManager implements Listener {
                 p.teleport(currentArena.getTeamChooseLocation());
                 p.getInventory().clear();
                 p.setHealth(p.getMaxHealth());
-
             }
+            InManager.get().getInstance(ShopManager.class).resetAllPlayers();
             if(winner != null) {
                 Bukkit.broadcastMessage(winner.getColor()+winner.getName()+" has won the game!");
                 currentArena.spawnFireworks(winner);
@@ -176,6 +190,7 @@ public class GameManager implements Listener {
         inGame = blueReady = redReady = false;
         redCaptureState = blueCaptureState = redCapAmount = blueCapAmount = 0;
         lastBlueCap = lastRedCap = 0;
+        attackData.clear();
         currentArena.resetTeams();
         currentArena.resetArena(true, false);
     }
@@ -261,6 +276,81 @@ public class GameManager implements Listener {
         BukkitUtils.sendCapabilities(player,  c);
     }
 
+    public void handleDamage(Player victim) {
+        AttackData d = attackData.stream().filter(e -> e.victim.equals(victim.getUniqueId())).findFirst().orElse(null);
+        if(d != null) d.updateAttack();
+    }
+
+    public void handleAttack(Player victim, Player from) {
+        if(from == null) return;
+        AttackData d = attackData.stream().filter(e -> e.victim.equals(victim.getUniqueId())).findFirst().orElse(null);
+        if(d != null) {
+            d.updateAttack();
+            d.damager = from.getUniqueId();
+        }
+        else {
+            d = new AttackData(from, victim);
+            attackData.add(d);
+        }
+    }
+
+    public void handleKill(Player victim) {
+        Player attacker = getLastAttacker(victim);
+        removeDataFor(victim.getUniqueId());
+        if(attacker != null) {
+            String atS = currentArena.getTeam(attacker).getColor()+attacker.getName()+ChatColor.GREEN, vicS = currentArena.getTeam(victim).getColor()+victim.getName()+ChatColor.GREEN;
+            Bukkit.broadcastMessage(ChatColor.GREEN+BY_PLAYER[NumberUtils.random.nextInt(BY_PLAYER.length)].replace("%victim", vicS).replace("%damager", atS));
+
+        } else {
+            EntityDamageEvent ev = victim.getLastDamageCause();
+            String pl = victim.getName(), cause = ev.getCause().name().toLowerCase().replace("_", " ");
+            Bukkit.broadcastMessage(ChatColor.GREEN + DEATH[NumberUtils.random.nextInt(GameManager.DEATH.length)]
+                    .replace("%player", currentArena.getTeam(victim).getColor() + pl + ChatColor.GREEN).replace("%death", cause));
+        }
+        currentArena.getTeam(victim).addDamageCooldown(victim);
+        victim.getWorld().spawnParticle(Particle.CRIT, victim.getLocation(), 75, 0.5, 1.2, 0.3, 0);
+
+        for (Player pl : Bukkit.getOnlinePlayers()) {
+            if (pl.getUniqueId().equals(victim.getUniqueId())) continue;
+            pl.playSound(victim.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_DEATH, 2.0f, 2.0f);
+        }
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                handlePlayerDeath(victim, attacker != null);
+                victim.playSound(victim.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_DEATH, 2.0f, 2.0f);
+            }
+        }.runTask(InManager.get().getInstance(Main.class));
+    }
+
+    public void invalidateAttackData() {
+        attackData.stream().filter(a -> a.getTimeSinceLastHit() >= ATTACK_CACHE_TIME).forEach(attackData::remove);
+    }
+
+    public void removeDataFor(UUID player) {
+        attackData.stream().filter(a -> a.victim.equals(player) || a.damager.equals(player)).forEach(attackData::remove);
+    }
+
+    public Player getLastAttacker(Player player) {
+        AttackData d = attackData.stream().filter(e -> e.victim.equals(player.getUniqueId())).findFirst().orElse(null);
+        return d == null ? null : d.getDamager();
+    }
+
+    public void handlePlayerDeath(Player player, boolean isPlayer) {
+        GameManager gm = InManager.get().getInstance(GameManager.class);
+        if(gm.isInGame()) {
+            {
+                Location pos1 = player.getLocation(), pos2 = pos1.add(0, 1, 0);
+                int material = Material.STAINED_GLASS.getId(), data = gm.getCurrentArena().getTeam(player).getGlassColor();
+                player.getWorld().playEffect(pos1, Effect.STEP_SOUND, material, data);
+                player.getWorld().playEffect(pos2, Effect.STEP_SOUND, material, data);
+            }
+            gm.getCurrentArena().createRespawnData(player, isPlayer);
+            player.setGameMode(GameMode.SPECTATOR);
+            gm.sendRespawnTitleTo(player);
+        }
+    }
+
     public List<Material> getSpawnFoods() {
         return foods;
     }
@@ -316,14 +406,14 @@ public class GameManager implements Listener {
         GameManager gm = InManager.get().getInstance(GameManager.class);
         GameManager.RespawnData d = gm.getCurrentArena().getRespawnData(player);
         if(d != null) {
-            double percent = (d.getTimeSinceInitialized() * 1d / RESPAWN_TIME * 1d) * 100d;
+            double percent = (d.getTimeSinceInitialized() * 1d / d.getTimeUsed() * 1d) * 100d;
             //red orange yellow green
             int id = percent <= 25 ? 1 : percent <= 50 ? 2 : percent <= 75 ? 3 : 4;
             String c = d.getTimeSinceInitialized() % 500 < 250 ? "c" : "e", c2 = id == 1 ? "c" : id == 2 ? "6" : id == 3 ? "e" : "a";
-            if(d.getTimeSinceInitialized() % 1500 <= 900) player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 2.0f, 0.5f * id);
+            if(d.getTimeSinceInitialized() % 1750 <= 1200) player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 2.0f, 0.5f * id);
 
             BukkitUtils.Title title = new BukkitUtils.Title("&"+c+"&lYou have died!"),
-                    subTitle = new BukkitUtils.Title("&"+c2+TimeUtils.convertToString(RESPAWN_TIME - d.getTimeSinceInitialized())+"&a left until respawn!", true,
+                    subTitle = new BukkitUtils.Title("&"+c2+TimeUtils.convertToString(d.getTimeUsed() - d.getTimeSinceInitialized())+"&a left until respawn!", true,
                             d.hasTitle() ? 0 : 2, 20, 2);
             subTitle.sendTo(player, false, false);
             title.sendTo(player, false, false);
@@ -332,12 +422,41 @@ public class GameManager implements Listener {
         }
     }
 
+    public static class AttackData {
+        private UUID damager, victim;
+        private long lastHit;
+
+        public AttackData(Player damager, Player victim) {
+            this.damager = damager.getUniqueId();
+            this.victim = victim.getUniqueId();
+            this.lastHit = System.currentTimeMillis();
+        }
+
+        public Player getDamager() {
+            return Bukkit.getPlayer(damager);
+        }
+
+        public Player getVictim() {
+            return Bukkit.getPlayer(victim);
+        }
+
+        public long getTimeSinceLastHit() {
+            return System.currentTimeMillis() - lastHit;
+        }
+
+        public void updateAttack() {
+            lastHit = System.currentTimeMillis();
+        }
+    }
+
     public static class RespawnData {
         private long init, lastTitle;
         private UUID uuid;
+        private boolean isPlayer;
 
-        public RespawnData(UUID uuid) {
+        public RespawnData(UUID uuid, boolean isPlayer) {
             this.uuid = uuid;
+            this.isPlayer = isPlayer;
             this.init = System.currentTimeMillis();
         }
 
@@ -359,7 +478,11 @@ public class GameManager implements Listener {
         }
 
         public boolean shouldRespawn() {
-            return getTimeSinceInitialized() >= RESPAWN_TIME;
+            return getTimeSinceInitialized() >= getTimeUsed();
+        }
+
+        public long getTimeUsed() {
+            return isPlayer ? RESPAWN_TIME_PLAYER : RESPAWN_TIME_STUPID;
         }
 
         public UUID getUUID() {

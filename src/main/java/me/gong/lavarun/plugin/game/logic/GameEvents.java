@@ -7,6 +7,7 @@ import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.game.events.DeathEvent;
 import me.gong.lavarun.plugin.game.events.PreventBreakEvent;
+import me.gong.lavarun.plugin.shop.ShopManager;
 import me.gong.lavarun.plugin.util.BukkitUtils;
 import me.gong.lavarun.plugin.util.NumberUtils;
 import me.gong.lavarun.plugin.util.TimeUtils;
@@ -238,32 +239,24 @@ public class GameEvents implements Listener {
                     ev.setCancelled(true);
                     return;
                 }
+                gm.handleDamage(p);
                 if(p.getHealth() - ev.getFinalDamage() <= 0) {
                     DeathEvent pd = new DeathEvent(p, o);
                     Bukkit.getPluginManager().callEvent(pd);
                     ev.setCancelled(true);
                     if(!pd.isCancelled()) {
-                        currentArena.getTeam(p).onRespawn(p);
-                        p.getWorld().spawnParticle(Particle.CRIT, p.getLocation(), 75, 0.5, 1.2, 0.3, 0);
-                        for (Player pl : Bukkit.getOnlinePlayers()) {
-                            if (pl.getUniqueId().equals(p.getUniqueId())) continue;
-                            pl.playSound(p.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_DEATH, 2.0f, 2.0f);
-                        }
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                handlePlayerDeath(p);
-                                p.playSound(p.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_DEATH, 2.0f, 2.0f);
-                            }
-                        }.runTask(InManager.get().getInstance(Main.class));
-
-
-                        Bukkit.broadcastMessage(currentArena.getTeam(p).getColor() + p.getName() + " was killed by " +
-                                currentArena.getTeam((Player) ev.getDamager()) +ev.getDamager().getName() + ".");
+                        gm.handleAttack(p, (Player) ev.getDamager());
+                        gm.handleKill(p);
                     }
-                }
+                } else gm.handleAttack(p, (Player) ev.getDamager());
             } else ev.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onSwap(PlayerSwapHandItemsEvent ev) {
+        GameManager gm = InManager.get().getInstance(GameManager.class);
+        if(gm.isInGame() && ev.getPlayer().getGameMode() == GameMode.SURVIVAL) ev.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -271,7 +264,10 @@ public class GameEvents implements Listener {
         GameManager gm = InManager.get().getInstance(GameManager.class);
         Arena currentArena = gm.getCurrentArena();
         if(currentArena == null) return;
-        if(ev.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) return;
+        if(ev.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
+            System.out.println("Damage: "+ev.getDamage() +" final "+ev.getFinalDamage());
+            return;
+        }
         if(ev.getEntity() instanceof Player) {
             Player p = (Player) ev.getEntity();
             if(currentArena.isPlaying(p, true)) {
@@ -284,44 +280,10 @@ public class GameEvents implements Listener {
                     DeathEvent pd = new DeathEvent(p, ev.getCause());
                     Bukkit.getPluginManager().callEvent(pd);
                     ev.setCancelled(true);
-                    if (!pd.isCancelled()) {
-                        currentArena.getTeam(p).onRespawn(p);
-                        p.getWorld().spawnParticle(Particle.CRIT, p.getLocation(), 75, 0.5, 1.2, 0.3, 0);
-
-                        for (Player pl : Bukkit.getOnlinePlayers()) {
-                            if (pl.getUniqueId().equals(p.getUniqueId())) continue;
-                            pl.playSound(p.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_DEATH, 2.0f, 2.0f);
-                        }
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                handlePlayerDeath(p);
-                                p.playSound(p.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_DEATH, 2.0f, 2.0f);
-                            }
-                        }.runTask(InManager.get().getInstance(Main.class));
-
-                        String pl = p.getName(), cause = ev.getCause().name().toLowerCase().replace("_", " ");
-                        Bukkit.broadcastMessage(ChatColor.GREEN + GameManager.DEATH[NumberUtils.random.nextInt(GameManager.DEATH.length)]
-                                .replace("%player", currentArena.getTeam(p).getColor() + pl + ChatColor.GREEN).replace("%death", cause));
-                    }
+                    if (!pd.isCancelled()) gm.handleKill(p);
                 } else if(ev.getCause() == EntityDamageEvent.DamageCause.FIRE_TICK) p.setFireTicks(p.getFireTicks() > 40 ? 40 : p.getFireTicks());
             } else ev.setCancelled(true);
         } else ev.setCancelled(true);
-    }
-
-    public void handlePlayerDeath(Player player) {
-        GameManager gm = InManager.get().getInstance(GameManager.class);
-        if(gm.isInGame()) {
-            {
-                Location pos1 = player.getLocation(), pos2 = pos1.add(0, 1, 0);
-                int material = Material.STAINED_GLASS.getId(), data = gm.getCurrentArena().getTeam(player).getGlassColor();
-                player.getWorld().playEffect(pos1, Effect.STEP_SOUND, material, data);
-                player.getWorld().playEffect(pos2, Effect.STEP_SOUND, material, data);
-            }
-            gm.getCurrentArena().createRespawnData(player);
-            player.setGameMode(GameMode.SPECTATOR);
-            gm.sendRespawnTitleTo(player);
-        }
     }
 
 
