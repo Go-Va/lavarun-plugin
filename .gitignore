@@ -6,3 +6,4 @@
 dependency-reduced-pom.xml
 /target
 ItemAttribAPI.jar
+classes/artifacts/lavarun_plugin_jar/lavarun-plugin.jar
