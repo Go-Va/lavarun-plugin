@@ -1,6 +1,6 @@
 # lavarun-plugin
 
-TheMrGong's LavaRun map written as a Bukkit plugin.
+WesJD and TheMrGong's LavaRun map written as a Bukkit plugin.
 
 # License
 
