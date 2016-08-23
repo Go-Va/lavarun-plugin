@@ -36,6 +36,11 @@ public class AuthResponse {
         if(player != null) player.sendMessage(ChatColor.RED+"The response received from the server didn't match up with what we were waiting for.");
     }
 
+    public void informSuccess() {
+        Player player = Bukkit.getOnlinePlayers().stream().filter(p -> p.getName().equalsIgnoreCase(username)).findFirst().orElse(null);
+        if(player != null) player.sendMessage(ChatColor.GOLD+"Successfully connected to beam!");
+    }
+
     public boolean compareAgainst(AuthenticationWaiting waiting) {
         return waiting.getConfirmation().equals(confirmation) && waiting.getIp().equals(serverIP) && waiting.getUsername().equals(username) && waiting.getPort().equals(port);
     }

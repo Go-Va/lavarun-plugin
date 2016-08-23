@@ -162,6 +162,7 @@ public class GameManager implements Listener {
                 p.teleport(currentArena.getTeamChooseLocation());
                 p.getInventory().clear();
                 p.setHealth(p.getMaxHealth());
+                p.setLevel(0);
             }
             InManager.get().getInstance(ShopManager.class).resetAllPlayers();
             if(winner != null) {

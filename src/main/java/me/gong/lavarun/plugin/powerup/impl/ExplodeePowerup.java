@@ -22,9 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -131,6 +129,7 @@ public class ExplodeePowerup extends Powerup {
             e.remove();
             e.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, e.getLocation().add(0, 2, 0), 1, 0.0f, 0.0f, 0.0f, 0.0f);
             e.getWorld().playSound(e.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 2.0f, 0.0f);
+            List<UUID> attacked = new ArrayList<>();
             NumberUtils.getSphere(e.getLocation(), 5).forEach(bl -> {
                 if(gm.getCurrentArena().getPlayArea().contains(bl) || gm.getCurrentArena().getLavaRegion().contains(bl)) removeBlock(bl);
                 Player attack = Bukkit.getPlayer(data.playerId);
@@ -139,9 +138,14 @@ public class ExplodeePowerup extends Powerup {
                         .intersectsWith(new AxisAlignedBB(0, 0, 0, 1, 1, 1).offset(bl.getX(), bl.getY(), bl.getZ())))
                         .filter(b -> gm.getCurrentArena().isPlaying(b, true))
                         .forEach(b -> {
-                            if(attack != null) gm.handleAttack(b, attack);
+                            if(attacked.contains(b.getUniqueId()) || (attack == null || !gm.getCurrentArena().canBeDamaged(b, attack))) return;
+                            attacked.add(b.getUniqueId());
+
+                            gm.handleAttack(b, attack);
                             b.setVelocity(b.getVelocity().add(b.getLocation().subtract(e.getLocation()).toVector().normalize()).normalize().multiply(1.2));
-                            b.damage(Math.max(0, 10 - ((int) b.getLocation().distance(e.getLocation()))));
+                            double healthAfter = b.getHealth() - Math.max(0, 10 - ((int) b.getLocation().distance(e.getLocation())));
+                            if(healthAfter <= 0) gm.handleKill(b);
+                            else b.setHealth(healthAfter);
                         });
             });
         }

@@ -41,7 +41,7 @@ public class ChunkDestroyAction implements BeamAction {
 
     @Override
     public int getCooldown() {
-        return 1000 * 2;
+        return 1000 * 12;
     }
 
     @Override

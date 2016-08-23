@@ -4,7 +4,6 @@ import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.beam.actions.*;
 import me.gong.lavarun.plugin.beam.oauth.AuthResponse;
-import me.gong.lavarun.plugin.beam.oauth.OAuthListener;
 import me.gong.lavarun.plugin.beam.oauth.OAuthManager;
 import me.gong.lavarun.plugin.command.CommandManager;
 import me.gong.lavarun.plugin.game.GameManager;
@@ -18,12 +17,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import pro.beam.api.BeamAPI;
+import pro.beam.api.resource.BeamUser;
 import pro.beam.api.services.impl.UsersService;
 import pro.beam.interactive.net.packet.Protocol;
 import pro.beam.interactive.robot.Robot;
 import pro.beam.interactive.robot.RobotBuilder;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -156,8 +155,8 @@ public class BeamManager implements Listener {
 
     public void useConfiguration(BeamConfiguration beamConfiguration) {
         if(configuration != null) configuration.robot.close();
-        this.configuration = beamConfiguration;
-        reloadRobot();
+
+        reloadRobot(beamConfiguration);
     }
 
     public boolean hasUpdate(Protocol.ProgressUpdate.TactileUpdate.Builder b) {
@@ -236,17 +235,21 @@ public class BeamManager implements Listener {
         });
     }
 
-    public void reloadRobot() {
+    public void reloadRobot(BeamConfiguration newConfig) {
         Main.Config c = InManager.get().getInstance(Main.Config.class);
         resetButtons();
         tasks.clear();
         c.reloadConfig();
-        if(configuration != null)
+        if(configuration != null || newConfig != null)
             try {
-                createRobot(configuration);
+                createRobot(newConfig != null ? newConfig : configuration);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+    }
+
+    public void reloadRobot() {
+        reloadRobot(null);
     }
 
     public boolean toggleStreaming(Player player) {
@@ -342,13 +345,14 @@ public class BeamManager implements Listener {
     }
 
     public static class BeamConfiguration {
-        private BeamAPI api;
+        private BeamAPI beam;
         private Robot robot;
 
         public BeamConfiguration(AuthResponse response) {
-            this.api = new BeamAPI(response.token);
+            this.beam = new BeamAPI(response.token);
             try {
-                robot = new RobotBuilder().channel(api.use(UsersService.class).getCurrent().get().channel).build(api).get();
+                BeamUser user = beam.use(UsersService.class).getCurrent().get();
+                robot = new RobotBuilder().channel(user.channel.id).build(beam, false).get();
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }

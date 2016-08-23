@@ -15,20 +15,13 @@ public class AuthenticationWaiting {
 
     private String username, confirmation, port, ip;
 
-    public AuthenticationWaiting(String username, String confirmation, String port, String ip) {
-        this.username = username;
-        this.confirmation = confirmation;
-        this.port = port;
-        this.ip = ip;
-        this.initial = System.currentTimeMillis();
-    }
-
     public AuthenticationWaiting(String player) {
         this.username = player;
         this.confirmation = generateConfirmation();
         Main.Config config = InManager.get().getInstance(Main.Config.class);
         this.port = config.getPort()+"";
         this.ip = InManager.get().getInstance(Main.Config.class).getServerIP();
+        this.initial = System.currentTimeMillis();
     }
 
     public String generateConfirmation() {

@@ -102,9 +102,7 @@ public class WallerPowerup extends Powerup {
                         if ((begin.getBlockZ() % 2) != 0) useZ = 1;
                         if ((((l.getBlockZ() - useZ) % 2)) != -((l.getBlockY() % 2))) return false;
                     }
-                    if (!m.getCurrentArena().isBlockInteractable(l, s, ev.getPlayer(), false)) {
-                        return false;
-                    } else System.out.println("Ai?");
+                    if (!m.getCurrentArena().isBlockInteractable(l, s, ev.getPlayer(), false)) return false;
 
                     if (l.getBlock().getType() != Material.AIR && l.getBlockX() == begin.getBlockX() && l.getBlockZ() == begin.getBlockZ()) {
                         max.set(true);
@@ -115,7 +113,6 @@ public class WallerPowerup extends Powerup {
                 Collections.shuffle(allUsable);
                 ev.getPlayer().getInventory().setItem(3, s);
                 final int totalPercent = 26; //26% off
-                System.out.println("SIze :" +allUsable.size());
                 int use = 100 - totalPercent;
                 for(int i = 0; i < allUsable.size(); i++) {
                     double percent = (Math.max(i, 1) * 1.0 / allUsable.size() * 1.0) * 100;

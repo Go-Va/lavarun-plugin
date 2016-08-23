@@ -30,7 +30,7 @@ public class PoisonAction implements BeamAction {
 
     @Override
     public int getCooldown() {
-        return 1000 * 10;
+        return 1000 * 40;
     }
 
     @Override

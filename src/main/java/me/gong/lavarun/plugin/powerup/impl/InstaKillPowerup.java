@@ -54,9 +54,9 @@ public class InstaKillPowerup extends Powerup {
             Arena ca = m.getCurrentArena();
             Player dm = (Player) ev.getDamager(), p = (Player) ev.getEntity();
             if(ca.isPlaying(dm, true) && ca.isPlaying(p, true) && isSelected(dm)) {
-                onUse(dm);
 
                 if(ca.canBeDamaged(p, dm)) {
+                    onUse(dm);
                     ev.setCancelled(true);
                     m.handleAttack(p, dm);
                     m.handleKill(p);

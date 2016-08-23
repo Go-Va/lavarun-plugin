@@ -11,7 +11,7 @@ import java.util.List;
 
 public class OAuthManager {
 
-    private static final long WAIT_TIMEOUT = 5000;
+    private static final long WAIT_TIMEOUT = 1000 * 60 * 5;
 
     private OAuthListener listener;
     private AuthenticationWaiting waiting;
@@ -20,6 +20,7 @@ public class OAuthManager {
     public void onEnable(Main.Config config) {
         listener = new OAuthListener(config.getPort());
         timers = Timers.register(this);
+        listener.start();
     }
 
     public void onDisable() {
@@ -35,7 +36,11 @@ public class OAuthManager {
     public void onResponse(AuthResponse response) {
         if(waiting != null) {
             if(!response.compareAgainst(waiting)) response.informInvalid();
-            else InManager.get().getInstance(BeamManager.class).useConfiguration(new BeamManager.BeamConfiguration(response));
+            else {
+                waiting = null;
+                response.informSuccess();
+                InManager.get().getInstance(BeamManager.class).useConfiguration(new BeamManager.BeamConfiguration(response));
+            }
         }
     }
 

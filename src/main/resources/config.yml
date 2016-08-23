@@ -1,3 +1,2 @@
-username: billy
-password: ay
-channel: 123
+serverIP: "YourIp"
+port: 12345

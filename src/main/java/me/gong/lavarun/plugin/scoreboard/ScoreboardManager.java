@@ -40,6 +40,7 @@ public class ScoreboardManager implements Listener {
         }
         final Scoreboard b = p.getScoreboard();
         if(b.getObjective(ScoreboardHandler.OBJECTIVE_NAME) != null) b.getTeams().forEach(team -> {
+            if(!team.getName().contains("BoardLine")) return;
             team.setPrefix("");
             team.setSuffix("");
             team.getEntries().forEach(b::resetScores);

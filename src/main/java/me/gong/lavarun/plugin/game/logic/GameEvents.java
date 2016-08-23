@@ -172,6 +172,7 @@ public class GameEvents implements Listener {
         Arena currentArena = gm.getCurrentArena();
         if(currentArena == null) return;
         if(!gm.isInGame()) {
+            if(ev.getPlayer().getGameMode() != GameMode.CREATIVE) ev.setCancelled(true);
 
             if(ev.getClickedBlock() == null) return;
 
@@ -264,10 +265,7 @@ public class GameEvents implements Listener {
         GameManager gm = InManager.get().getInstance(GameManager.class);
         Arena currentArena = gm.getCurrentArena();
         if(currentArena == null) return;
-        if(ev.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
-            System.out.println("Damage: "+ev.getDamage() +" final "+ev.getFinalDamage());
-            return;
-        }
+        if(ev.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) return;
         if(ev.getEntity() instanceof Player) {
             Player p = (Player) ev.getEntity();
             if(currentArena.isPlaying(p, true)) {

@@ -70,10 +70,7 @@ public abstract class ScoreboardHandler {
 
     protected final void setScore(String score) {
         if (currentPlayer != null) {
-            if (currentLine <= 0) {
-                System.out.println("rip");
-                throw new RuntimeException("Max number of lines on scoreboard reached. (" + colors.size() + ")");
-            }
+            if (currentLine <= 0) throw new RuntimeException("Max number of lines on scoreboard reached. (" + colors.size() + ")");
             Objective objective = currentLocalScoreboard.getObjective(OBJECTIVE_NAME);
             objective.getScore(colors.get(currentLine).toString()).setScore(currentLine);
             String prefix = "", suffix = "";

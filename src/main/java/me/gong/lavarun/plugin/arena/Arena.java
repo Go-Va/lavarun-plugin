@@ -141,8 +141,9 @@ public class Arena {
         respawnData.remove(getRespawnData(player));
     }
 
-    public boolean canBeDamaged(Player victim, Player attacker) {
+    public boolean canBeDamaged(Player victim, Player attacker, boolean teams) {
         if(!isPlaying(victim, false) || !isPlaying(attacker, false)) return false;
+        if(getTeam(victim).equals(getTeam(attacker)) && teams) return false;
         if(foodRegion.contains(victim) || foodRegion.contains(attacker)) {
             return false;
         }
@@ -158,6 +159,10 @@ public class Arena {
         }
 
         return true;
+    }
+
+    public boolean canBeDamaged(Player victim, Player attacker) {
+        return canBeDamaged(victim, attacker, true);
     }
 
     public boolean isBlockInteractable(Location location, ItemStack used, Player player, boolean isBreak) {
