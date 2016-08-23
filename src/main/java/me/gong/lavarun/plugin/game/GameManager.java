@@ -46,7 +46,7 @@ public class GameManager implements Listener {
             "Another death added to the tally for %player, by %death!",
             "Did you enjoy %death %player?",
             "%player, there are other ways to die other than %death.",
-            "Are you proud of your accomplishment %player? Dieing to %death is really hard.",
+            "Are you proud of your accomplishment %player? Dying to %death is really hard.",
             "Embarrassing death is embarrassing. [%player rick-rolled by %death]",
             "Well shucks, %player died to %death.",
             "Rip. "+ Calendar.getInstance().get(Calendar.MONTH)+ " %player died to %death",
