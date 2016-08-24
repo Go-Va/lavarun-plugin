@@ -1,6 +1,5 @@
 package me.gong.lavarun.plugin.scoreboard;
 
-import com.google.common.collect.Iterators;
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.timer.Timer;

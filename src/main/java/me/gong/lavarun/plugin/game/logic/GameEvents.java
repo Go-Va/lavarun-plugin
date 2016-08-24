@@ -43,6 +43,8 @@ public class GameEvents implements Listener {
         ev.getPlayer().getInventory().clear();
         ev.getPlayer().setGameMode(GameMode.SURVIVAL);
         gm.setupScoreboard(ev.getPlayer());
+        currentArena.getRed().refeshAdded();
+        currentArena.getBlue().refeshAdded();
         if(gm.isInGame()) {
             ev.getPlayer().setGameMode(GameMode.SPECTATOR);
             ev.getPlayer().sendMessage(ChatColor.GRAY+"You are spectating this game");

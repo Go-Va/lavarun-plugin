@@ -1,5 +1,6 @@
 package me.gong.lavarun.plugin.beam;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.beam.actions.*;
@@ -18,11 +19,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import pro.beam.api.BeamAPI;
 import pro.beam.api.resource.BeamUser;
+import pro.beam.api.resource.channel.BeamChannel;
+import pro.beam.api.services.AbstractHTTPService;
+import pro.beam.api.services.impl.ChannelsService;
 import pro.beam.api.services.impl.UsersService;
 import pro.beam.interactive.net.packet.Protocol;
 import pro.beam.interactive.robot.Robot;
 import pro.beam.interactive.robot.RobotBuilder;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,7 +39,8 @@ import java.util.stream.Collectors;
 
 public class BeamManager implements Listener {
 
-    public static final String LAVA_RUN_SERVICE = "https://server.savikin.me/lavarunlive.php?username=%username&port=%port&confirmation=%confirm&ip=%ip";
+    public static final String LAVA_RUN_SERVICE = "https://server.savikin.me/lavarunlive.php?username=%username&port=%port&confirmation=%confirm&ip=%ip",
+            SHARE_CODE = "vylpz7p7";
 
     private BeamConfiguration configuration;
     private List<Protocol.ProgressUpdate.TactileUpdate.Builder> tasks;
@@ -68,6 +74,7 @@ public class BeamManager implements Listener {
         if(disabling) return;
         if(this.configuration != null) this.configuration.robot.close();
         this.configuration = configuration;
+        this.configuration.updateStream();
         this.configuration.robot.on(Protocol.Report.class, report -> {
             if(disabling || report == null) return;
             try {
@@ -347,13 +354,29 @@ public class BeamManager implements Listener {
     public static class BeamConfiguration {
         private BeamAPI beam;
         private Robot robot;
+        private BeamUser user;
 
         public BeamConfiguration(AuthResponse response) {
             this.beam = new BeamAPI(response.token);
             try {
-                BeamUser user = beam.use(UsersService.class).getCurrent().get();
+                user = beam.use(UsersService.class).getCurrent().get();
                 robot = new RobotBuilder().channel(user.channel.id).build(beam, false).get();
             } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void updateStream() {
+            try {
+                //String path, Class<T> type, Object... args
+                Method putM = AbstractHTTPService.class.getDeclaredMethod("put", String.class, Class.class, Object[].class);
+                putM.setAccessible(true);
+                ListenableFuture<BeamChannel> g = (ListenableFuture<BeamChannel>)
+                        putM.invoke(beam.use(ChannelsService.class), user.channel.id, BeamChannel.class,
+                                "interactiveGameId", "5209", "interactiveShareCode", "vylpz7p7");
+                BeamChannel beamChannel = g.get();
+                System.out.println("WE GOT A THING :D DDDD");
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

@@ -143,6 +143,7 @@ public class Arena {
 
     public boolean canBeDamaged(Player victim, Player attacker, boolean teams) {
         if(!isPlaying(victim, false) || !isPlaying(attacker, false)) return false;
+        if(attacker.equals(victim)) return true;
         if(getTeam(victim).equals(getTeam(attacker)) && teams) return false;
         if(foodRegion.contains(victim) || foodRegion.contains(attacker)) {
             return false;

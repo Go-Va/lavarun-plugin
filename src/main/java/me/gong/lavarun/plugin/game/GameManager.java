@@ -301,7 +301,9 @@ public class GameManager implements Listener {
         if(attacker != null) {
             String atS = currentArena.getTeam(attacker).getColor()+attacker.getName()+ChatColor.GREEN, vicS = currentArena.getTeam(victim).getColor()+victim.getName()+ChatColor.GREEN;
             Bukkit.broadcastMessage(ChatColor.GREEN+BY_PLAYER[NumberUtils.random.nextInt(BY_PLAYER.length)].replace("%victim", vicS).replace("%damager", atS));
-
+            ShopManager sm = InManager.get().getInstance(ShopManager.class);
+            int newPoints = Math.min(100, sm.getPoints(attacker) + 30);
+            sm.setPoints(attacker, newPoints);
         } else {
             EntityDamageEvent ev = victim.getLastDamageCause();
             String pl = victim.getName(), cause = ev.getCause().name().toLowerCase().replace("_", " ");

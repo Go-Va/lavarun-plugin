@@ -41,7 +41,7 @@ public class FreezerPowerup extends Powerup {
 
     @Override
     public String getName() {
-        return "Freezer";
+        return "Freezer2";
     }
 
     @Override
@@ -52,6 +52,12 @@ public class FreezerPowerup extends Powerup {
     @EventHandler
     public void onInteract(PlayerInteractEvent ev) {
         if(ev.getPlayer().hasPotionEffect(PotionEffectType.SLOW)) ev.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onDeath(DeathEvent ev) {
+        ev.getPlayer().removePotionEffect(PotionEffectType.SLOW);
+        ev.getPlayer().removePotionEffect(PotionEffectType.JUMP);
     }
 
     @EventHandler

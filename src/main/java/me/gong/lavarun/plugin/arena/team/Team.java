@@ -79,8 +79,13 @@ public class Team {
         return t;
     }
 
+    public ItemStack getBaseGlass() {
+        return new ItemStack(Material.STAINED_GLASS, 1, glassColor);
+    }
+
     public ItemStack getGlass(Player player) {
-        ItemStack ret = new ItemStack(Material.STAINED_GLASS, 64, glassColor);
+        ItemStack ret = getBaseGlass();
+        ret.setAmount(64);
         ItemMeta m = ret.getItemMeta();
         m.setDisplayName(color+player.getName()+"'s Building Blocks");
         ret.setItemMeta(m);
@@ -147,6 +152,13 @@ public class Team {
         players.remove(player.getUniqueId());
         lastRespawn.remove(player.getUniqueId());
         removeFromTeam(player.getName());
+    }
+
+    public void refeshAdded() {
+        players.forEach(u -> {
+            Player p = Bukkit.getPlayer(u);
+            if(p != null) addToTeam(p.getName());
+        });
     }
 
     public void addToTeam(String player) {

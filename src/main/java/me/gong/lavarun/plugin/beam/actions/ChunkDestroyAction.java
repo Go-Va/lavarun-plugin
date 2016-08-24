@@ -1,15 +1,16 @@
 package me.gong.lavarun.plugin.beam.actions;
 
-import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.beam.BeamAction;
-import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.region.Region;
 import me.gong.lavarun.plugin.region.creation.box.Box;
 import me.gong.lavarun.plugin.util.AxisAlignedBB;
 import me.gong.lavarun.plugin.util.BlockUtils;
 import me.gong.lavarun.plugin.util.BukkitUtils;
 import me.gong.lavarun.plugin.util.NumberUtils;
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import pro.beam.interactive.net.packet.Protocol;
 

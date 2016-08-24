@@ -31,7 +31,7 @@ public class PowerupManager {
         lastPowerup = new HashMap<>();
         Class<?>[] powerups = new Class[] {KnockerPowerup.class, SabotagePowerup.class,
                 InstaKillPowerup.class, WallerPowerup.class, ResupplyPowerup.class,
-                PathEmUpPowerup.class, ExplodeePowerup.class, FreezerPowerup.class}; //patheeeeee
+                PathEmUpPowerup.class, ExplodeePowerup.class, FreezerPowerup.class, LandminePowerup.class}; //patheeeeee
         Arrays.stream(powerups).forEach(p -> {
             try {
                 addPowerup((Powerup) p.newInstance());
