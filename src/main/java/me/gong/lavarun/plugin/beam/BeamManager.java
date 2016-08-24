@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.json.simple.JSONObject;
 import pro.beam.api.BeamAPI;
 import pro.beam.api.resource.BeamUser;
 import pro.beam.api.resource.channel.BeamChannel;
@@ -27,11 +28,15 @@ import pro.beam.interactive.net.packet.Protocol;
 import pro.beam.interactive.robot.Robot;
 import pro.beam.interactive.robot.RobotBuilder;
 
+import javax.net.ssl.HttpsURLConnection;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -74,6 +79,7 @@ public class BeamManager implements Listener {
         if(disabling) return;
         if(this.configuration != null) this.configuration.robot.close();
         this.configuration = configuration;
+        this.configuration.initialize();
         this.configuration.updateStream();
         this.configuration.robot.on(Protocol.Report.class, report -> {
             if(disabling || report == null) return;
@@ -355,11 +361,21 @@ public class BeamManager implements Listener {
         private BeamAPI beam;
         private Robot robot;
         private BeamUser user;
+        private String token;
 
         public BeamConfiguration(AuthResponse response) {
             this.beam = new BeamAPI(response.token);
             try {
+                token = response.token;
                 user = beam.use(UsersService.class).getCurrent().get();
+                initialize();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void initialize() {
+            try {
                 robot = new RobotBuilder().channel(user.channel.id).build(beam, false).get();
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
@@ -368,14 +384,21 @@ public class BeamManager implements Listener {
 
         public void updateStream() {
             try {
-                //String path, Class<T> type, Object... args
-                Method putM = AbstractHTTPService.class.getDeclaredMethod("put", String.class, Class.class, Object[].class);
-                putM.setAccessible(true);
-                ListenableFuture<BeamChannel> g = (ListenableFuture<BeamChannel>)
-                        putM.invoke(beam.use(ChannelsService.class), user.channel.id, BeamChannel.class,
-                                "interactiveGameId", "5209", "interactiveShareCode", "vylpz7p7");
-                BeamChannel beamChannel = g.get();
-                System.out.println("WE GOT A THING :D DDDD");
+                URL url = new URL("https://beam.pro/api/v1/channels/"+user.channel.id);
+                HttpsURLConnection httpCon = (HttpsURLConnection) url.openConnection();
+                httpCon.setDoOutput(true);
+                httpCon.setDoInput(true);
+                httpCon.setRequestProperty("Authorization", "Bearer "+token);
+                httpCon.setRequestMethod("PUT");
+                OutputStreamWriter out = new OutputStreamWriter(
+                        httpCon.getOutputStream());
+                JSONObject obj = new JSONObject();
+                obj.put("interactiveGameId", 5209);
+                obj.put("interactiveShareCode", SHARE_CODE);
+                obj.put("interactive", true);
+                out.write(obj.toJSONString());
+                out.close();
+                System.out.println("Response: "+httpCon.getResponseCode()+" "+httpCon.getResponseMessage());
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -54,7 +54,7 @@ public class SpleefAction implements BeamAction {
 
     @Override
     public int getCooldown() {
-        return 1000 * 10;
+        return 1000 * 30;
     }
 
     @Override

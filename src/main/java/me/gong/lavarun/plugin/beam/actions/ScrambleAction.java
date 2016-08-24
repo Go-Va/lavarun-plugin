@@ -41,7 +41,7 @@ public class ScrambleAction implements BeamAction {
 
     @Override
     public int getCooldown() {
-        return 5000;
+        return 1000 * 20;
     }
 
     public void swap(Block block) {

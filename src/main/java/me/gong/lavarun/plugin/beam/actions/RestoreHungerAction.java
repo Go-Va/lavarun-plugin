@@ -41,6 +41,6 @@ public class RestoreHungerAction implements BeamAction {
 
     @Override
     public int getCooldown() {
-        return 30000;
+        return 1000 * 15;
     }
 }
