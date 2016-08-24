@@ -46,19 +46,36 @@ public class GameManager implements Listener {
             "Another death added to the tally for %player, by %death!",
             "Did you enjoy %death %player?",
             "%player, there are other ways to die other than %death.",
-            "Are you proud of your accomplishment %player? Dieing to %death is really hard.",
+            "Are you proud of your accomplishment %player? Dying to %death is really hard.",
             "Embarrassing death is embarrassing. [%player rick-rolled by %death]",
             "Well shucks, %player died to %death.",
-            "Rip. "+ Calendar.getInstance().get(Calendar.MONTH)+ " %player died to %death",
+            "Rip. "+ Calendar.getInstance().get(Calendar.YEAR)+ " %player died to %death",
             "Hahahaha. +1 to %death, get your act together %player",
             "That was fun %player, I bet %death enjoyed it.",
-            "%player, I'm not sassy, I'm a conversationalist. Also, watch out for %death next time."};
+            "%player, I'm not sassy, I'm a conversationalist. Also, watch out for %death next time.",
+            "What's that, Sherlock? %death can hurt %player? I have no idea how you came to that conclusion.",
+            "FRESH OUTTA DEATH LINES FOR %player",
+            "%player isn't afraid of lava, seeing that he's already dead on the inside.",
+            "%player, why don't you use some of that salt on your fries. You don't have to be blaming %death for everything.",
+            "If at first you don't succeed %player, fail 5 more times trying to beat %death.",
+            "If we removed %death, there wouldn't be a way to die %player.",
+            "Did you think it would be funny dying to %death, %player?",
+            "%player sometimes dreams about cheese and %death.",
+            "After that...who knows? I might take up a hobby. Reanimating %player, maybe.(%death)"};
 
     public static final String[] BY_PLAYER = new String[] {"%victim was murdered gruesomely by %damager",
             "The savage %damager killed %victim", "%victim destroyed by %damager!", "Oh, oh OH! %victim SHREKT by %damager!",
             "%victim needs a break from %damager.", "%damager is not letting %victim have a good day",
             "%victim, at least a player (%damager) killed you. You could've died to lava.", "%victim, try not to get on %damager's bad side next time",
-            "Try combating %damager with some powerups, %victim!"};
+            "Try combating %damager with some powerups, %victim!",
+            "No, %victim, the server did not lag while %damager killed you.",
+            "Pushing others off makes you that guy %damager. Poor %victim didn't do anything wrong.",
+            "If you just let %damager cap, you'll see fireworks at the end %victim!",
+            "Make %damager rue the day it thought it could give %victim lemons! Do you know who I am? I'm the man who's going to burn your house down! With the lemons! I'm going to get my engineers to invent a combustible lemon that burns your house down.",
+            "%damager, now please bring %victim some pain pills.",
+            "%victim are you trying to test %damager?",
+            "Well done. Here come the test results: You are a horrible person, %damager. I'm serious, that's what it says: You killer %victim. We weren't even testing for that",
+            "You don't have to test with the %victim, %damager. It's garbage"};
 
     public static final long RESPAWN_TIME_PLAYER = 1000 * 10, RESPAWN_TIME_STUPID = 1000 * 4, ATTACK_CACHE_TIME = 1000 * 3;
 
