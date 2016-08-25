@@ -66,4 +66,9 @@ public class AuthenticationWaiting {
     public String getClickable() {
         return BeamManager.LAVA_RUN_SERVICE.replace("%username", username).replace("%confirm", confirmation).replace("%port", port).replace("%ip", ip);
     }
+
+    public void informError() {
+        Player p = Bukkit.getOnlinePlayers().stream().filter(pl -> pl.getName().equalsIgnoreCase(username)).findFirst().orElse(null);
+        if(p != null) p.sendMessage(ChatColor.RED+"Error occurred using OAuth. "+(!p.isOp() ? "Please contact an admin." : ""));
+    }
 }

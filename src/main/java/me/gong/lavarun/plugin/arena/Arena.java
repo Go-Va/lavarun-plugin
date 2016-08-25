@@ -4,6 +4,7 @@ import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.game.GameManager;
+import me.gong.lavarun.plugin.game.events.ArenaResetEvent;
 import me.gong.lavarun.plugin.game.events.PreventBreakEvent;
 import me.gong.lavarun.plugin.powerup.Powerup;
 import me.gong.lavarun.plugin.powerup.PowerupManager;
@@ -101,6 +102,8 @@ public class Arena {
             Block b = l.getBlock();
             if(b.getTypeId() == Material.STAINED_GLASS.getId()) b.setType(Material.AIR);
         });
+
+        Bukkit.getPluginManager().callEvent(new ArenaResetEvent());
 
         if(fullReset) {
             respawnData.clear();

@@ -49,15 +49,15 @@ public class SabotagePowerup extends Powerup {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBreak(PreventBreakEvent ev) {
-        Arena a = InManager.get().getInstance(GameManager.class).getCurrentArena();
+        GameManager gm = InManager.get().getInstance(GameManager.class);
+        Arena a = gm.getCurrentArena();
         Player p = ev.getPlayer();
         Block b = ev.getBlock();
         if(a.isPlaying(p, false) && isSelected(p) && a.getPlayArea().contains(b.getLocation()) && b.getType() == Material.STAINED_GLASS && b.getData() != 0) {
             ev.setCancelled(true);
             if(ev.isBreak()) {
                 onUse(p);
-                if(a.getLavaRegion().contains(b.getLocation()))
-                    Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), () -> b.setType(Material.LAVA));
+                gm.handleBreak(ev.getPlayer(), true, b.getLocation());
             }
         }
     }

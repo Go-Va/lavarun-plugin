@@ -2,18 +2,16 @@ package me.gong.lavarun.plugin.powerup;
 
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.Main;
-import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.game.GameManager;
+import me.gong.lavarun.plugin.game.events.ArenaResetEvent;
 import me.gong.lavarun.plugin.powerup.impl.*;
 import me.gong.lavarun.plugin.shop.ShopManager;
 import me.gong.lavarun.plugin.timer.Timers;
-import me.gong.lavarun.plugin.util.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
@@ -61,6 +59,11 @@ public class PowerupManager {
         lastPowerup.remove(ev.getPlayer().getUniqueId());
     }
 
+    @EventHandler
+    public void onReset(ArenaResetEvent ev) {
+        powerups.forEach(Powerup::reset);
+    }
+
     private void addPowerup(Powerup p) {
         powerups.add(p);
         Timers.register(p);
@@ -68,7 +71,7 @@ public class PowerupManager {
     }
 
     public void onGameEnd() {
-        powerups.forEach(Powerup::unload);
+        powerups.forEach(Powerup::reset);
     }
 
     public void givePlayerPowerup(Player player, Powerup give) {

@@ -5,6 +5,7 @@ import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.arena.Arena;
 import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.command.CommandManager;
+import me.gong.lavarun.plugin.game.events.BlockRemovedEvent;
 import me.gong.lavarun.plugin.game.events.GameBeginEvent;
 import me.gong.lavarun.plugin.game.events.GameEndEvent;
 import me.gong.lavarun.plugin.game.logic.GameEvents;
@@ -76,6 +77,8 @@ public class GameManager implements Listener {
             "%victim are you trying to test %damager?",
             "Well done. Here come the test results: You are a horrible person, %damager. I'm serious, that's what it says: You killer %victim. We weren't even testing for that",
             "You don't have to test with the %victim, %damager. It's garbage"};
+
+    public static final String[] STUPID_SELF = new String[] {"%player was dumb."};
 
     public static final long RESPAWN_TIME_PLAYER = 1000 * 10, RESPAWN_TIME_STUPID = 1000 * 4, ATTACK_CACHE_TIME = 1000 * 3;
 
@@ -294,6 +297,15 @@ public class GameManager implements Listener {
         BukkitUtils.sendCapabilities(player,  c);
     }
 
+    public boolean handleBreak(Player by, boolean manual, Location location) {
+        Block b = location.getBlock();
+        if(b.getType() != Material.STAINED_GLASS) return false;
+        if(currentArena.getLavaRegion().contains(location)) b.setType(Material.LAVA);
+        else b.setType(Material.AIR);
+        Bukkit.getPluginManager().callEvent(new BlockRemovedEvent(b, by, manual));
+        return true;
+    }
+
     public void handleDamage(Player victim) {
         AttackData d = attackData.stream().filter(e -> e.victim.equals(victim.getUniqueId())).findFirst().orElse(null);
         if(d != null) d.updateAttack();
@@ -312,15 +324,30 @@ public class GameManager implements Listener {
         }
     }
 
+    public void attackPlayer(Player victim, int amount, Player from) {
+        if(from != null) handleAttack(victim, from);
+        if(victim.getHealth() - amount <= 0) handleKill(victim);
+        else victim.damage(amount);
+    }
+
     public void handleKill(Player victim) {
         Player attacker = getLastAttacker(victim);
         removeDataFor(victim.getUniqueId());
         if(attacker != null) {
-            String atS = currentArena.getTeam(attacker).getColor()+attacker.getName()+ChatColor.GREEN, vicS = currentArena.getTeam(victim).getColor()+victim.getName()+ChatColor.GREEN;
-            Bukkit.broadcastMessage(ChatColor.GREEN+BY_PLAYER[NumberUtils.random.nextInt(BY_PLAYER.length)].replace("%victim", vicS).replace("%damager", atS));
-            ShopManager sm = InManager.get().getInstance(ShopManager.class);
-            int newPoints = Math.min(100, sm.getPoints(attacker) + 30);
-            sm.setPoints(attacker, newPoints);
+            if(attacker.getUniqueId().equals(victim.getUniqueId())) {
+                Bukkit.broadcastMessage(ChatColor.GREEN + STUPID_SELF[NumberUtils.random.nextInt(BY_PLAYER.length)]
+                        .replace("%player", currentArena.getTeam(attacker).getColor()+victim.getName()+ChatColor.GREEN));
+            } else {
+                String atS = currentArena.getTeam(attacker).getColor() + attacker.getName() + ChatColor.GREEN,
+                        vicS = currentArena.getTeam(victim).getColor() + victim.getName() + ChatColor.GREEN;
+                Bukkit.broadcastMessage(ChatColor.GREEN + BY_PLAYER[NumberUtils.random.nextInt(BY_PLAYER.length)]
+                        .replace("%victim", vicS).replace("%damager", atS));
+                if(!currentArena.getTeam(attacker).equals(currentArena.getTeam(victim))) {
+                    ShopManager sm = InManager.get().getInstance(ShopManager.class);
+                    int newPoints = Math.min(100, sm.getPoints(attacker) + 30);
+                    sm.setPoints(attacker, newPoints);
+                }
+            }
         } else {
             EntityDamageEvent ev = victim.getLastDamageCause();
             String pl = victim.getName(), cause = ev.getCause().name().toLowerCase().replace("_", " ");

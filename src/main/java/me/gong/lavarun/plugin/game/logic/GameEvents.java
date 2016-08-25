@@ -163,7 +163,6 @@ public class GameEvents implements Listener {
             Bukkit.getPluginManager().callEvent(pB);
             if (!pB.isCancelled()) ev.setCancelled(true);
         } else if(currentArena.getLavaRegion().contains(b.getLocation())) {
-            ev.setCancelled(true);
             Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), () -> b.setType(Material.LAVA));
         }
     }
@@ -228,12 +227,15 @@ public class GameEvents implements Listener {
                         ev.setCancelled(true);
                         return;
                     }
-                    if(currentArena.getPlayArea().contains(p)) ev.setDamage(0);
+                    if(currentArena.getPlayArea().contains(p)) {
+                        ev.setDamage(0);
+                        gm.attackPlayer(p, 1, o);
+                    }
                     if(currentArena.getTeam(o).equals(currentArena.getTeam(p)) || !currentArena.canBeDamaged(p, o)) {
                         ev.setCancelled(true);
                         if(currentArena.isPlaying(p, true) && !currentArena.getFoodRegion().contains(p) && !currentArena.getFoodRegion().contains(o) && !currentArena.getTeam(p).getCaptureRegion().contains(p) &&
                                 !currentArena.getTeam(o).equals(currentArena.getTeam(p))) {
-                            p.damage(0);
+                            gm.attackPlayer(p, 1, o);
                             NumberUtils.knockEntityWithDamage(o, p);
                         }
                         return;
@@ -281,7 +283,10 @@ public class GameEvents implements Listener {
                     Bukkit.getPluginManager().callEvent(pd);
                     ev.setCancelled(true);
                     if (!pd.isCancelled()) gm.handleKill(p);
-                } else if(ev.getCause() == EntityDamageEvent.DamageCause.FIRE_TICK) p.setFireTicks(p.getFireTicks() > 40 ? 40 : p.getFireTicks());
+                } else {
+                    gm.handleDamage(p);
+                    if(ev.getCause() == EntityDamageEvent.DamageCause.FIRE_TICK) p.setFireTicks(p.getFireTicks() > 40 ? 40 : p.getFireTicks());
+                }
             } else ev.setCancelled(true);
         } else ev.setCancelled(true);
     }

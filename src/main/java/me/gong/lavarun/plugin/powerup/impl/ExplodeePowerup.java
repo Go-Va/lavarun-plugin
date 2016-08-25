@@ -131,7 +131,7 @@ public class ExplodeePowerup extends Powerup {
             e.getWorld().playSound(e.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 2.0f, 0.0f);
             List<UUID> attacked = new ArrayList<>();
             NumberUtils.getSphere(e.getLocation(), 5).forEach(bl -> {
-                if(gm.getCurrentArena().getPlayArea().contains(bl) || gm.getCurrentArena().getLavaRegion().contains(bl)) removeBlock(bl);
+                if(gm.getCurrentArena().getPlayArea().contains(bl) || gm.getCurrentArena().getLavaRegion().contains(bl)) removeBlock(data.playerId, bl);
                 Player attack = Bukkit.getPlayer(data.playerId);
                 e.getWorld().getPlayers().stream().filter(pl -> LocationUtils.toBounding(pl)
 
@@ -143,9 +143,7 @@ public class ExplodeePowerup extends Powerup {
 
                             gm.handleAttack(b, attack);
                             b.setVelocity(b.getVelocity().add(b.getLocation().subtract(e.getLocation()).toVector().normalize()).normalize().multiply(1.2));
-                            double healthAfter = b.getHealth() - Math.max(0, 10 - ((int) b.getLocation().distance(e.getLocation())));
-                            if(healthAfter <= 0) gm.handleKill(b);
-                            else b.setHealth(healthAfter);
+                            gm.attackPlayer(b, Math.max(0, 10 - ((int) b.getLocation().distance(e.getLocation()))), attack);
                         });
             });
         }
@@ -155,18 +153,16 @@ public class ExplodeePowerup extends Powerup {
         return trackedItems.keySet().stream().filter(k -> k.itemId.equals(itemId)).findFirst().orElse(null);
     }
 
-    private void removeBlock(Location location) {
+    private void removeBlock(UUID by, Location location) {
         Block b = location.getBlock();
         GameManager gm = InManager.get().getInstance(GameManager.class);
         int origin = b.getTypeId(), data = b.getData();
-        if(b.getType() != Material.STAINED_GLASS) return;
-        if(gm.getCurrentArena().getLavaRegion().contains(location)) b.setType(Material.LAVA);
-        else b.setType(Material.AIR);
+        if(!gm.handleBreak(Bukkit.getPlayer(by), false, location)) return;
         location.getWorld().playEffect(location, Effect.STEP_SOUND, origin, data);
     }
 
     @Override
-    public void unload() {
+    public void reset() {
         if(lastWorld == null) return;
         World d = Bukkit.getWorld(lastWorld);
         if(d != null)

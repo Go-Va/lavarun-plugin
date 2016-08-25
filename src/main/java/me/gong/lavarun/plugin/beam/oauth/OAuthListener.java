@@ -37,6 +37,7 @@ public class OAuthListener extends WebSocketServer {
             e.printStackTrace();
             //not using json
             webSocket.close();
+            InManager.get().getInstance(BeamManager.class).getOAuthManager().handleError(e);
         }
     }
 

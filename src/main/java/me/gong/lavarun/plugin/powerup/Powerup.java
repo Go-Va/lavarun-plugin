@@ -32,7 +32,7 @@ public abstract class Powerup implements Listener {
 
     public abstract int getCost();
 
-    public void unload() {
+    public void reset() {
 
     }
 

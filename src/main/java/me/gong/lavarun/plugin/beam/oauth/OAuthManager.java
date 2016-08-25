@@ -44,6 +44,14 @@ public class OAuthManager {
         }
     }
 
+    public void handleError(Throwable t) {
+        t.printStackTrace();
+        if(waiting != null) {
+            waiting.informError();
+            waiting = null;
+        }
+    }
+
     public void checkAndRemoveOutdated() {
         if(waiting != null &&  waiting.getTimeSinceInitialization() >= WAIT_TIMEOUT) {
             waiting.informRemoved();
