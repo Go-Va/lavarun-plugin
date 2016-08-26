@@ -398,7 +398,6 @@ public class BeamManager implements Listener {
                 obj.put("interactive", true);
                 out.write(obj.toJSONString());
                 out.close();
-                System.out.println("Response: "+httpCon.getResponseCode()+" "+httpCon.getResponseMessage());
             } catch (Exception e) {
                 e.printStackTrace();
             }

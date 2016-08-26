@@ -79,6 +79,10 @@ public class Team {
         return t;
     }
 
+    public int getTeamSize() {
+        return players.size();
+    }
+
     public ItemStack getBaseGlass() {
         return new ItemStack(Material.STAINED_GLASS, 1, glassColor);
     }

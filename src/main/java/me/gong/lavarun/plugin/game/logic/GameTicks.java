@@ -3,11 +3,13 @@ package me.gong.lavarun.plugin.game.logic;
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.arena.Arena;
+import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.shop.ShopManager;
 import me.gong.lavarun.plugin.timer.Timer;
 import me.gong.lavarun.plugin.util.BukkitUtils;
 import me.gong.lavarun.plugin.util.NumberUtils;
+import me.gong.lavarun.plugin.util.TimeUtils;
 import org.bukkit.*;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -37,7 +39,7 @@ public class GameTicks {
         }
     }
 
-    @Timer(runEvery = 20)
+    @Timer(runEvery = 1000, millisTime = true)
     public void gameTick() {
 
         GameManager gm = InManager.get().getInstance(GameManager.class);
@@ -71,7 +73,7 @@ public class GameTicks {
             if(gm.blueCaptureState > 5) gm.blueCapAmount++;
 
             if(gm.redCaptureState > 5 || gm.blueCaptureState > 5) {
-                currentArena.resetArena(false, false);
+                Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), () -> currentArena.resetArena(false, false));
                 if(toUse != null) {
                     toUse.forEach(p  -> {
                         gm.spawnPlayer(p, false);
@@ -121,6 +123,12 @@ public class GameTicks {
                 BukkitUtils.Title t = new BukkitUtils.Title("&a&lYou have respawned", true, 0, 15, 1);
                 t.sendTo(d.getPlayer());
             } else gm.sendRespawnTitleTo(d.getPlayer());
+        }
+
+        if(gm.getCurrentArena().getTimeWithoutEnoughPlayers() >= Arena.ONE_SIDED_TIMEOUT) {
+            gm.stopGame((Team) null);
+            Bukkit.broadcastMessage(ChatColor.RED+"No players joined the game within "+ChatColor.YELLOW+ TimeUtils.convertToString(Arena.ONE_SIDED_TIMEOUT));
+
         }
     }
 }

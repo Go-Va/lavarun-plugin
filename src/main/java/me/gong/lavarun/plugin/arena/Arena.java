@@ -6,10 +6,7 @@ import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.game.events.ArenaResetEvent;
 import me.gong.lavarun.plugin.game.events.PreventBreakEvent;
-import me.gong.lavarun.plugin.powerup.Powerup;
-import me.gong.lavarun.plugin.powerup.PowerupManager;
 import me.gong.lavarun.plugin.region.Region;
-import me.gong.lavarun.plugin.shop.ShopManager;
 import me.gong.lavarun.plugin.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -19,22 +16,15 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 public class Arena {
-    /*
-    two play buttons for each team
-
-    team spawns
-    team kit
-    team capture location
-
-    food location
-     */
+    
+    public static final int NO_PLAYERS = 0, ONE_SIDED = 1, ENOUGH_PLAYERS = 2;
+    public static final long ONE_SIDED_TIMEOUT = 1000 * 60;
 
     private String name;
     private List<Location> foodSpawn, fireworkSpawns;
@@ -43,6 +33,7 @@ public class Arena {
     private Location teamChooseLocation;
 
     private List<GameManager.RespawnData> respawnData;
+    private long timeWithoutEnoughPlayers;
 
     public Arena(String name, List<Location> foodSpawn, List<Location> fireworkSpawn, Location teamChooseLocation, Region playArea, Region lavaRegion, Region foodRegion, Team blue, Team red) {
         this.name = name;
@@ -106,6 +97,7 @@ public class Arena {
         Bukkit.getPluginManager().callEvent(new ArenaResetEvent());
 
         if(fullReset) {
+            timeWithoutEnoughPlayers = 0;
             respawnData.clear();
             playArea.getWorld().getEntities().stream()
                     .filter(e -> e instanceof Item)
@@ -117,8 +109,21 @@ public class Arena {
         }
     }
 
+    public Team getTeamToJoin() {
+        return blue.getTeamSize() == red.getTeamSize() ? null : blue.getTeamSize() < red.getTeamSize() ? blue : red;
+    }
+
     public GameManager.RespawnData getRespawnData(UUID uuid) {
         return respawnData.stream().filter(s -> s.getUUID().equals(uuid)).findFirst().orElse(null);
+    }
+
+    public long getTimeWithoutEnoughPlayers() {
+        int state = hasEnoughPlayers();
+        if(state != ONE_SIDED) {
+            if(state == ENOUGH_PLAYERS) timeWithoutEnoughPlayers = 0;
+            return 0;
+        }
+        return timeWithoutEnoughPlayers == 0 ? 0 : System.currentTimeMillis() - timeWithoutEnoughPlayers;
     }
 
     public GameManager.RespawnData getRespawnData(Player player) {
@@ -220,6 +225,12 @@ public class Arena {
         }
         return false;
     }
+    
+    private int hasEnoughPlayers() {
+        if(red.getTeamSize() == 0 && blue.getTeamSize() == 0) return NO_PLAYERS;
+        else if(red.getTeamSize() == 0 || blue.getTeamSize() == 0) return ONE_SIDED;
+        return ENOUGH_PLAYERS;
+    }
 
     public void spawnFireworks(Team team) {
         new BukkitRunnable() {
@@ -254,6 +265,37 @@ public class Arena {
         red.resetTeam();
     }
 
+    public void joinTeam(Player player, Team team) {
+        GameManager gm = InManager.get().getInstance(GameManager.class);
+        Team curTeam = getTeam(player);
+        if(curTeam != null) curTeam.removePlayer(player);
+        team.addPlayer(player);
+        gm.spawnPlayer(player, true);
+        team.giveKit(player);
+        player.sendMessage(ChatColor.GREEN+"You have joined "+team.getColor()+team.getName()+" team");
+        if(timeWithoutEnoughPlayers != 0 && hasEnoughPlayers() != ENOUGH_PLAYERS) {
+            timeWithoutEnoughPlayers = 0;
+            Bukkit.broadcastMessage(ChatColor.GREEN+"Enough players to resume playing.");
+        }
+    }
+
+    public void addPlayer(Player player) {
+        GameManager gm = InManager.get().getInstance(GameManager.class);
+        player.teleport(getTeamChooseLocation());
+        player.setSaturation(15);
+        player.setFoodLevel(20);
+        gm.setHunger(player, false);
+        player.getInventory().clear();
+        player.setGameMode(GameMode.SURVIVAL);
+        gm.setupScoreboard(player);
+        getRed().refeshAdded();
+        getBlue().refeshAdded();
+        if(gm.isInGame()) {
+            player.setGameMode(GameMode.SPECTATOR);
+            player.sendMessage(ChatColor.GRAY+"You are spectating this game");
+        } else player.setGameMode(GameMode.SURVIVAL);
+    }
+
     public void removePlayer(Player player) {
         blue.removePlayer(player);
         red.removePlayer(player);
@@ -262,6 +304,12 @@ public class Arena {
         player.setFireTicks(0);
         player.setFoodLevel(20);
         player.setSaturation(5);
+        int playerState = hasEnoughPlayers();
+        if(playerState == NO_PLAYERS) InManager.get().getInstance(GameManager.class).stopGame((Team) null);
+        else if(playerState == ONE_SIDED) {
+            timeWithoutEnoughPlayers = System.currentTimeMillis();
+            Bukkit.broadcastMessage(ChatColor.RED+"Not enough players to play. Game ends in "+ChatColor.YELLOW+TimeUtils.convertToString(ONE_SIDED_TIMEOUT));
+        }
     }
 
     public boolean isPlaying(Player player, boolean ignoreRespawning) {

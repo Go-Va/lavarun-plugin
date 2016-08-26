@@ -25,13 +25,16 @@ public class PointsMinerHandler implements Listener {
 
     private Block currentBlock;
     private long lastSpawn;
+    private boolean blockExists;
 
-    @Timer(runEvery = 20)
+    @Timer(runEvery = 20 * 50, millisTime = true, pool = false)
     public void createBlock() {
         GameManager gm = InManager.get().getInstance(GameManager.class);
-        if(getCurrentBlock() != null)
+
+        if(blockExists)
             currentBlock.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, currentBlock.getLocation().add(0.5, 0.5, 0.5), 6, 0.5, 0.5, 0.5, 0.3);
-        if(currentBlock == null && gm.isInGame() && System.currentTimeMillis() - lastSpawn > 1000 * 3) {
+        if(!blockExists && gm.isInGame() && System.currentTimeMillis() - lastSpawn > 1000 * 3) {
+            System.out.println("This is getting called");
             Arena c = gm.getCurrentArena();
             World w = c.getPlayArea().getWorld();
             Location min = c.getLavaRegion().getBoxes().get(0).getMinimum(w).clone(),
@@ -84,8 +87,10 @@ public class PointsMinerHandler implements Listener {
                 if(percent <= totalPercent) use.add(spawnables.get(i));
             }
             lastSpawn = System.currentTimeMillis();
+            blockExists = true;
+
             currentBlock = spawnables.get(new Random().nextInt(use.size())).getBlock();
-            currentBlock.setType(Material.LEAVES);
+            Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), () -> currentBlock.setType(Material.LEAVES));
         }
     }
 
@@ -93,7 +98,7 @@ public class PointsMinerHandler implements Listener {
     public void onBreak(PreventBreakEvent ev) {
         GameManager gm = InManager.get().getInstance(GameManager.class);
 
-        if(getCurrentBlock() != null && gm.isInGame() && ev.getBlock().getLocation().equals(currentBlock.getLocation())) {
+        if(blockExists && gm.isInGame() && ev.getBlock().getLocation().equals(currentBlock.getLocation())) {
             ev.setCancelled(true);
             if(!ev.isBreak()) return;
 
@@ -101,20 +106,16 @@ public class PointsMinerHandler implements Listener {
             int points = Math.min(ShopManager.MAXIMUM_POINTS, m.getPoints(ev.getPlayer()) + ADDED_POINTS);
             m.setPoints(ev.getPlayer(), points);
             ev.getPlayer().playSound(ev.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_YES, 2.0f, 1.0f);
+            blockExists = false;
             Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), this::resetBlock);
         }
     }
 
     public void resetBlock() {
-        if(getCurrentBlock() != null) {
+        if(blockExists) {
             GameManager gm = InManager.get().getInstance(GameManager.class);
             gm.handleBreak(null, false, currentBlock.getLocation());
+            blockExists = false;
         }
-    }
-
-    public Block getCurrentBlock() {
-        if(currentBlock == null) return null;
-        if(currentBlock.getType() != Material.LEAVES) currentBlock = null;
-        return currentBlock;
     }
 }

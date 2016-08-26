@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 public class InGameBoard extends ScoreboardHandler {
 
     public InGameBoard() {
-        super("&c&lLava &6&lRun &7[InGame]", 1);
+        super("&c&lLava &6&lRun &7[InGame]", 20);
     }
 
     public static final long flashTime = 500, niceTime = 1750;

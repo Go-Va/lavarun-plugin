@@ -9,11 +9,14 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 /*
  * @author WesJD https://github.com/WesJD
+ * @modifier TheMrGong
  */
 public @interface Timer {
 
     long runEvery();
 
     boolean millisTime() default false;
+
+    boolean pool() default true;
 
 }

@@ -13,11 +13,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author WesJD https://github.com/WesJD
  * @modifier TheMrGong
-*/
+ */
 public abstract class ScoreboardHandler {
 
     public static final String OBJECTIVE_NAME = UUID.randomUUID().toString().substring(0, 15);
@@ -102,48 +103,45 @@ public abstract class ScoreboardHandler {
     }
 
     public final void update(Player player) {
-        try {
-            currentPlayer = player.getUniqueId();
-            currentLocalScoreboard = player.getPlayer().getScoreboard();
-            currentLine = 15;
+        currentPlayer = player.getUniqueId();
+        currentLocalScoreboard = player.getPlayer().getScoreboard();
+        currentLine = 15;
 
-            Objective objective = currentLocalScoreboard.getObjective(OBJECTIVE_NAME);
-            if (objective == null) {
-                objective = currentLocalScoreboard.registerNewObjective(OBJECTIVE_NAME, "dummy");
-                objective.setDisplayName(StringUtils.format(displayName));
-                objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-                for (int i = 0; i < colors.size(); i++) {
-                    final ChatColor color = colors.get(i);
+        Objective objective = currentLocalScoreboard.getObjective(OBJECTIVE_NAME);
+        if (objective == null) {
+            objective = currentLocalScoreboard.registerNewObjective(OBJECTIVE_NAME, "dummy");
+            objective.setDisplayName(StringUtils.format(displayName));
+            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+            for (int i = 0; i < colors.size(); i++) {
+                final ChatColor color = colors.get(i);
 
-                    org.bukkit.scoreboard.Team team = currentLocalScoreboard.getTeam("BoardLine" + i);
-                    if (team != null) team.unregister();
-                    team = currentLocalScoreboard.registerNewTeam("BoardLine" + i);
+                org.bukkit.scoreboard.Team team = currentLocalScoreboard.getTeam("BoardLine" + i);
+                if (team != null) team.unregister();
+                team = currentLocalScoreboard.registerNewTeam("BoardLine" + i);
 
-                    team.addEntry(color.toString());
-                }
+                team.addEntry(color.toString());
             }
+        }
 
-            build(getCurrentPlayer());
+        build(getCurrentPlayer());
 
-            if (!objective.getDisplayName().equals(StringUtils.format(displayName))) {
-                objective.setDisplayName(StringUtils.format(displayName));
+        if (!objective.getDisplayName().equals(StringUtils.format(displayName))) {
+            objective.setDisplayName(StringUtils.format(displayName));
+        }
+
+        for (org.bukkit.scoreboard.Team team : currentLocalScoreboard.getTeams()) {
+            try {
+                if(!team.getName().contains("BoardLine")) continue;
+                int num = Integer.parseInt(team.getName().replace("BoardLine", ""));
+                if (num > currentLine) continue;
+
+                team.setPrefix("");
+                team.setSuffix("");
+                for (String score : team.getEntries()) currentLocalScoreboard.resetScores(score);
+            } catch (NumberFormatException ex) {
+                team.unregister();
+                ex.printStackTrace();
             }
-
-            for (org.bukkit.scoreboard.Team team : currentLocalScoreboard.getTeams()) {
-                try {
-                    if(!team.getName().contains("BoardLine")) continue;
-                    int num = Integer.parseInt(team.getName().replace("BoardLine", ""));
-                    if (num > currentLine) continue;
-                    team.setPrefix("");
-                    team.setSuffix("");
-                    for (String score : team.getEntries()) currentLocalScoreboard.resetScores(score);
-                } catch (NumberFormatException ex) {
-                    team.unregister();
-                    ex.printStackTrace();
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 

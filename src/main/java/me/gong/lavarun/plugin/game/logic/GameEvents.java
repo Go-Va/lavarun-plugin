@@ -36,19 +36,7 @@ public class GameEvents implements Listener {
         GameManager gm = InManager.get().getInstance(GameManager.class);
         Arena currentArena = gm.getCurrentArena();
         if(currentArena == null) return;
-        ev.getPlayer().teleport(currentArena.getTeamChooseLocation());
-        ev.getPlayer().setSaturation(15);
-        ev.getPlayer().setFoodLevel(20);
-        gm.setHunger(ev.getPlayer(), false);
-        ev.getPlayer().getInventory().clear();
-        ev.getPlayer().setGameMode(GameMode.SURVIVAL);
-        gm.setupScoreboard(ev.getPlayer());
-        currentArena.getRed().refeshAdded();
-        currentArena.getBlue().refeshAdded();
-        if(gm.isInGame()) {
-            ev.getPlayer().setGameMode(GameMode.SPECTATOR);
-            ev.getPlayer().sendMessage(ChatColor.GRAY+"You are spectating this game");
-        } else ev.getPlayer().setGameMode(GameMode.SURVIVAL);
+        currentArena.addPlayer(ev.getPlayer());
     }
 
     @EventHandler
