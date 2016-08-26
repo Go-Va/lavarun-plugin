@@ -2,3 +2,7 @@ name: LavaRun
 version: ${version}
 main: me.gong.lavarun.plugin.Main
 authors: [TheMrGong]
+permissions:
+  lavarun.admin:
+    description: Gives permission to use lavarun commands (/game, /beam)
+    default: op
