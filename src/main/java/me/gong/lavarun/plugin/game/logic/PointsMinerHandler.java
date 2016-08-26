@@ -92,6 +92,7 @@ public class PointsMinerHandler implements Listener {
     @EventHandler
     public void onBreak(PreventBreakEvent ev) {
         GameManager gm = InManager.get().getInstance(GameManager.class);
+
         if(getCurrentBlock() != null && gm.isInGame() && ev.getBlock().getLocation().equals(currentBlock.getLocation())) {
             ev.setCancelled(true);
             if(!ev.isBreak()) return;

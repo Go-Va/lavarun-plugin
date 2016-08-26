@@ -39,6 +39,7 @@ public class GameTicks {
 
     @Timer(runEvery = 20)
     public void gameTick() {
+
         GameManager gm = InManager.get().getInstance(GameManager.class);
         Arena currentArena = gm.getCurrentArena();
         if(gm.isInGame() && currentArena != null) {

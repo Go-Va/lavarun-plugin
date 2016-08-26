@@ -96,7 +96,7 @@ public class LandminePowerup extends Powerup {
     @EventHandler
     public void onWalk(PlayerMoveEvent ev) {
         GameManager m = InManager.get().getInstance(GameManager.class);
-        if(!m.isInGame()) return;
+        if(!m.isInGame() || lmD.isEmpty()) return;
         lmD.stream().filter(l -> l.isStandingOn(ev.getPlayer())).forEach(l -> lmD.remove(l.explode()));
     }
 

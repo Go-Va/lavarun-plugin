@@ -66,7 +66,7 @@ public class ScoreboardManager implements Listener {
         if(scoreboardHandlers.containsKey(ev.getPlayer().getUniqueId())) scoreboardHandlers.remove(ev.getPlayer().getUniqueId());
     }
 
-    @Timer(runEvery = 1L)
+    @Timer(runEvery = 5L)
     public void tick() {
 
         scoreboardHandlers.keySet()
