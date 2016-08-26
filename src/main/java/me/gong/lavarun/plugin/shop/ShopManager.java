@@ -17,6 +17,8 @@ import java.util.UUID;
 
 public class ShopManager implements Listener {
 
+    public static final int MAXIMUM_POINTS = 100;
+
     private Map<UUID, Integer> points;
 
     public ShopManager() {

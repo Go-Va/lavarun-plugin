@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 
 public interface Cmd {
     default boolean hasPerms(Player player) {
-        if(!player.isOp()) {
+        if(!player.isOp() && !player.hasPermission("lavarun.admin") && !player.hasPermission("*")) {
             player.sendMessage(ChatColor.RED+"Insufficient permissions young man");
             return false;
         }

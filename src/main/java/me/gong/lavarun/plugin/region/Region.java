@@ -11,6 +11,7 @@ import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,10 @@ public class Region {
     public Region(Box[] boxes, String world) {
         this.boxes = Arrays.stream(boxes).collect(Collectors.toList());
         this.world = world;
+    }
+
+    public Region(AxisAlignedBB axisAlignedBB, String world) {
+        this(Collections.singletonList(axisAlignedBB), world);
     }
 
     public JSONObject toJSON() {

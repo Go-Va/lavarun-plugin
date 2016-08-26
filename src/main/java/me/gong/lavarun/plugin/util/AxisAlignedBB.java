@@ -24,6 +24,10 @@ public class AxisAlignedBB {
         this.maxZ = Math.max(z1, z2);
     }
 
+    public AxisAlignedBB(Location begin, Location end) {
+        this(begin.getX(), begin.getY(), begin.getZ(), end.getX(), end.getY(), end.getZ());
+    }
+
     /**
      * For the x
      * @return The length

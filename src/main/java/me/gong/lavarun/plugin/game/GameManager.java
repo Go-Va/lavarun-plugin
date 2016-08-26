@@ -8,6 +8,7 @@ import me.gong.lavarun.plugin.command.CommandManager;
 import me.gong.lavarun.plugin.game.events.BlockRemovedEvent;
 import me.gong.lavarun.plugin.game.events.GameBeginEvent;
 import me.gong.lavarun.plugin.game.events.GameEndEvent;
+import me.gong.lavarun.plugin.game.logic.PointsMinerHandler;
 import me.gong.lavarun.plugin.game.logic.GameEvents;
 import me.gong.lavarun.plugin.game.logic.GameTicks;
 import me.gong.lavarun.plugin.game.scoreboard.InGameBoard;
@@ -92,11 +93,13 @@ public class GameManager implements Listener {
     private List<Material> foods = new ArrayList<>();
     private List<AttackData> attackData;
     private ScoreboardHandler inGameBoard, lobbyBoard;
+    private PointsMinerHandler foodMiner;
 
     public GameManager() {
         inGameBoard = new InGameBoard();
         lobbyBoard = new LobbyBoard();
         attackData = new CopyOnWriteArrayList<>();
+        foodMiner = new PointsMinerHandler();
         foods.add(Material.COOKED_FISH);
         foods.add(Material.BREAD);
         foods.add(Material.APPLE);
@@ -116,7 +119,9 @@ public class GameManager implements Listener {
 
     public void onEnable() {
         Timers.register(new GameTicks());
+        Timers.register(foodMiner);
         Bukkit.getPluginManager().registerEvents(new GameEvents(), InManager.get().getInstance(Main.class));
+        Bukkit.getPluginManager().registerEvents(foodMiner, InManager.get().getInstance(Main.class));
         loadArenas();
     }
 
@@ -173,6 +178,7 @@ public class GameManager implements Listener {
     public void stopGame(Team winner) {
         if(inGame) {
             resetAll();
+            foodMiner.resetBlock();
             Bukkit.getPluginManager().callEvent(new GameEndEvent());
             for (Player p : Bukkit.getOnlinePlayers()) {
                 setupScoreboard(p);
@@ -299,7 +305,7 @@ public class GameManager implements Listener {
 
     public boolean handleBreak(Player by, boolean manual, Location location) {
         Block b = location.getBlock();
-        if(b.getType() != Material.STAINED_GLASS) return false;
+        if(b.getType() != Material.STAINED_GLASS && by != null) return false;
         if(currentArena.getLavaRegion().contains(location)) b.setType(Material.LAVA);
         else b.setType(Material.AIR);
         Bukkit.getPluginManager().callEvent(new BlockRemovedEvent(b, by, manual));
@@ -335,7 +341,7 @@ public class GameManager implements Listener {
         removeDataFor(victim.getUniqueId());
         if(attacker != null) {
             if(attacker.getUniqueId().equals(victim.getUniqueId())) {
-                Bukkit.broadcastMessage(ChatColor.GREEN + STUPID_SELF[NumberUtils.random.nextInt(BY_PLAYER.length)]
+                Bukkit.broadcastMessage(ChatColor.GREEN + STUPID_SELF[NumberUtils.random.nextInt(STUPID_SELF.length)]
                         .replace("%player", currentArena.getTeam(attacker).getColor()+victim.getName()+ChatColor.GREEN));
             } else {
                 String atS = currentArena.getTeam(attacker).getColor() + attacker.getName() + ChatColor.GREEN,
@@ -344,7 +350,7 @@ public class GameManager implements Listener {
                         .replace("%victim", vicS).replace("%damager", atS));
                 if(!currentArena.getTeam(attacker).equals(currentArena.getTeam(victim))) {
                     ShopManager sm = InManager.get().getInstance(ShopManager.class);
-                    int newPoints = Math.min(100, sm.getPoints(attacker) + 30);
+                    int newPoints = Math.min(ShopManager.MAXIMUM_POINTS, sm.getPoints(attacker) + 30);
                     sm.setPoints(attacker, newPoints);
                 }
             }

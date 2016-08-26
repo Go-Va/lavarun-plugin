@@ -47,7 +47,7 @@ public class PowerupManager {
                 tR.forEach(lastPowerup::remove);
                 if(m.isInGame()) {
                     for(Player p : m.getCurrentArena().getPlaying(true)) {
-                        if(p.getLevel() < 100) InManager.get().getInstance(ShopManager.class).addPoints(p, 1);
+                        if(p.getLevel() < ShopManager.MAXIMUM_POINTS) InManager.get().getInstance(ShopManager.class).addPoints(p, 1);
                     }
                 }
             }
