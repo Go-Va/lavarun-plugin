@@ -53,7 +53,7 @@ public class PowerupManager implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(InManager.get().getInstance(Main.class), 0, 20 * 2);
+        }.runTaskTimer(InManager.get().getInstance(Main.class), 0, 20 * 4);
     }
 
     @EventHandler

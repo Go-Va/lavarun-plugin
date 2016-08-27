@@ -50,6 +50,13 @@ public class WallerPowerup extends Powerup {
         return 60;
     }
 
+    @Override
+    public String[] getHelp() {
+        return new String[] {"Right click in lava to place down",
+        "a large wall. The wall isn't 100% secure and",
+        "has holes."};
+    }
+
     @EventHandler
     public void onPlace(BlockPlaceEvent ev) {
         GameManager m = InManager.get().getInstance(GameManager.class);

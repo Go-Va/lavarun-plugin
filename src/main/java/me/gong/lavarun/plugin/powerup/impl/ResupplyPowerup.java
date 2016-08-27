@@ -32,5 +32,11 @@ public class ResupplyPowerup extends Powerup {
         return 15;
     }
 
+    @Override
+    public String[] getHelp() {
+        return new String[] {"Get a resupply after either running",
+        "out of blocks or capturing."};
+    }
+
 
 }

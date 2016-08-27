@@ -47,6 +47,12 @@ public class InstaKillPowerup extends Powerup {
         return 50;
     }
 
+    @Override
+    public String[] getHelp() {
+        return new String[] {"Instantly kills players upon hit.",
+        "Only works on players that aren't on their side."};
+    }
+
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent ev) {
         GameManager m = InManager.get().getInstance(GameManager.class);

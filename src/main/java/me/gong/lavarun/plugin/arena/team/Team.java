@@ -187,6 +187,10 @@ public class Team {
         shopArea.update(player);
     }
 
+    public boolean handleBlockClick(Player player, Location at) {
+        return isOnTeam(player) && shopArea.handleRightClick(player, at);
+    }
+
     public void resetTeam() {
 
         players.forEach(p -> {

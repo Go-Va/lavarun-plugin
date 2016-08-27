@@ -32,6 +32,8 @@ public abstract class Powerup implements Listener {
 
     public abstract int getCost();
 
+    public abstract String[] getHelp();
+
     public void reset() {
 
     }

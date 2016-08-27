@@ -7,10 +7,7 @@ import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.powerup.Powerup;
 import me.gong.lavarun.plugin.powerup.PowerupManager;
-import me.gong.lavarun.plugin.util.AxisAlignedBB;
-import me.gong.lavarun.plugin.util.BlockUtils;
-import me.gong.lavarun.plugin.util.JSONUtils;
-import me.gong.lavarun.plugin.util.Vec3d;
+import me.gong.lavarun.plugin.util.*;
 import org.bukkit.*;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -18,6 +15,7 @@ import org.bukkit.util.Vector;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -77,6 +75,12 @@ public class ShopArea {
         return isStandingOn(player, exitArea);
     }
 
+    public Powerup getPowerupForLocation(Location location) {
+        return powerupPurchase.entrySet().stream()
+                .filter(e -> e.getValue().getBlock().getLocation().equals(location.getBlock().getLocation()))
+                .map(l -> InManager.get().getInstance(PowerupManager.class).getPowerup(l.getKey())).findFirst().orElse(null);
+    }
+
     public void update(Player player) {
         boolean enter = isStandingOnEnter(player), exit = isStandingOnExit(player);
         Vector v = player.getVelocity();
@@ -117,6 +121,16 @@ public class ShopArea {
                 } else player.sendMessage(ChatColor.RED+"You don't have enough points to purchase "+ChatColor.YELLOW+now.getName()+" ["+now.getCost()+"]");
             }
         }
+    }
+
+    public boolean handleRightClick(Player player, Location at) {
+        Powerup p = getPowerupForLocation(at);
+        if(p != null) {
+            player.sendMessage(ChatColor.YELLOW+ChatColor.BOLD.toString()+"Help for "+ChatColor.GREEN+p.getName()+" [Cost: "+p.getCost()+", Uses: "+p.getMaxUses()+"]");
+            Arrays.stream(p.getHelp()).forEach(s -> player.sendMessage(ChatColor.RED+"- "+StringUtils.format(s)));
+            return true;
+        }
+        return false;
     }
 
     private Location createTeleport(Location location, Player player) {

@@ -20,7 +20,7 @@ public class InGameBoard extends ScoreboardHandler {
         if(!m.isInGame()) return;
         
         setScore(null);
-        setScore("&7Playing: &aArena");
+        setScore("&7Playing: &a"+m.getCurrentArena().getName());
         setScore(null);
         boolean blue = !m.getCurrentArena().isPlaying(p, true) || m.getCurrentArena().getTeam(p).getName().equalsIgnoreCase("Blue");
         if(blue) renderBlue(m);

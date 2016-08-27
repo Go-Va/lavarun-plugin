@@ -50,12 +50,20 @@ public class LandminePowerup extends Powerup {
 
     @Override
     public String getName() {
-        return "Freezer";
+        return "Landmine";
     }
 
     @Override
     public int getCost() {
         return 40;
+    }
+
+    @Override
+    public String[] getHelp() {
+        return new String[] {"Right click a glass block with two blocks",
+        "of air above and set a landmine there. When an ",
+        "enemy walks over it, they will explode.",
+        "&e3x3&c blast area that does damage to all players/blocks."};
     }
 
     @Override

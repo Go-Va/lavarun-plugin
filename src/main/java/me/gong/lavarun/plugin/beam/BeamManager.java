@@ -1,6 +1,5 @@
 package me.gong.lavarun.plugin.beam;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.beam.actions.*;
@@ -20,21 +19,13 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.json.simple.JSONObject;
 import pro.beam.api.BeamAPI;
 import pro.beam.api.resource.BeamUser;
-import pro.beam.api.resource.channel.BeamChannel;
-import pro.beam.api.services.AbstractHTTPService;
-import pro.beam.api.services.impl.ChannelsService;
 import pro.beam.api.services.impl.UsersService;
 import pro.beam.interactive.net.packet.Protocol;
 import pro.beam.interactive.robot.Robot;
 import pro.beam.interactive.robot.RobotBuilder;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -54,13 +45,14 @@ public class BeamManager implements Listener {
     private List<UUID> streamers;
 
     private List<BeamAction> actions;
-    private List<BeamState> states;
+    private List<BeamButtonState> buttonStates;
+    private String currentState;
     private boolean disabling;
 
     public BeamManager() {
         actions = new ArrayList<>();
         streamers = new ArrayList<>();
-        states = new ArrayList<>();
+        buttonStates = new ArrayList<>();
 
         tasks = new CopyOnWriteArrayList<>();
 
@@ -87,6 +79,8 @@ public class BeamManager implements Listener {
                 return;
             }
         }
+        currentState = "default";
+
         this.configuration.robot.on(Protocol.Report.class, report -> {
             if(disabling || report == null) return;
             try {
@@ -107,15 +101,17 @@ public class BeamManager implements Listener {
                             broadcastToStream(ChatColor.RED + "Uh oh! No action for that button!", true);
                         return;
                     }
-                    BeamState s = getStateForId(a.getButtonId());
+                    BeamButtonState s = getStateForId(a.getButtonId());
 
                     GameManager m = InManager.get().getInstance(GameManager.class);
                     if (!m.isInGame()) {
+                        progress.setState("no-game");
                         if (!s.isDisabled()) task.setDisabled(true);
                         if(s.hasCooldown()) task.setCooldown(0);
 
                         broadcastToStream(ChatColor.RED + "Buttons are ineffective! No game running.", true);
                     } else {
+                        progress.setState("default");
                         updateAction(progress, task, a);
 
                         if (i.getPressFrequency() > 0 && !s.hasCooldown()) {
@@ -128,7 +124,10 @@ public class BeamManager implements Listener {
                         progress.addTactile(task);
                     }
                 }
-                if (progress.getTactileCount() > 0 && this.configuration != null) this.configuration.robot.write(progress.build());
+                if (progress.getTactileCount() > 0 || !progress.getState().equalsIgnoreCase(currentState) && this.configuration != null) {
+                    currentState = progress.getState();
+                    this.configuration.robot.write(progress.build());
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -143,7 +142,9 @@ public class BeamManager implements Listener {
 
     private void applyState(Protocol.ProgressUpdate.TactileUpdate.Builder update) {
         if (update == null) return;
-        BeamState s = getStateForId(update.getId());
+        BeamButtonState s = getStateForId(update.getId());
+        if(s == null) return;
+
         update.setDisabled(s.isDisabled());
         update.setFired(s.isFired());
         if (s.hasCooldown()) {
@@ -158,7 +159,7 @@ public class BeamManager implements Listener {
     }
 
     private void resetButtons() {
-        states.forEach(BeamState::reset);
+        buttonStates.forEach(BeamButtonState::reset);
     }
 
     public boolean isInteractiveConnected() {
@@ -179,12 +180,12 @@ public class BeamManager implements Listener {
     }
 
     public boolean hasUpdate(Protocol.ProgressUpdate.TactileUpdate.Builder b) {
-        BeamState s = getStateForId(b.getId());
+        BeamButtonState s = getStateForId(b.getId());
         return b.getDisabled() != s.isDisabled() || b.getFired() != s.isFired() || (b.getCooldown() > 0) != s.hasCooldown();
     }
 
     public void updateButtonState(int id, boolean disabled, boolean fired, long cooldown) {
-        BeamState s = getStateForId(id);
+        BeamButtonState s = getStateForId(id);
         s.setDisabled(disabled);
         s.setFired(fired);
         if(cooldown > 0) s.setCooldownEnd(cooldown);
@@ -205,7 +206,7 @@ public class BeamManager implements Listener {
 
     private void addAction(BeamAction action) {
         actions.add(action);
-        states.add(new BeamState(action.getButtonId()));
+        buttonStates.add(new BeamButtonState(action.getButtonId()));
         Bukkit.getPluginManager().registerEvents(action, InManager.get().getInstance(Main.class));
     }
 
@@ -213,8 +214,8 @@ public class BeamManager implements Listener {
         return actions.stream().filter(a -> a.getButtonId() == id).findFirst().orElse(null);
     }
 
-    private BeamState getStateForId(int id) {
-        return states.stream().filter(st -> st.getId() == id).findFirst().orElse(null);
+    private BeamButtonState getStateForId(int id) {
+        return buttonStates.stream().filter(st -> st.getId() == id).findFirst().orElse(null);
     }
 
     private Protocol.ProgressUpdate.TactileUpdate.Builder getTask(int id) {
@@ -311,12 +312,12 @@ public class BeamManager implements Listener {
         if(updates.size() > 0) updates.forEach(this::addTask);
     }
 
-    public class BeamState {
+    public class BeamButtonState {
         private boolean disabled, fired;
         private long cooldownEnd;
         private final int id;
 
-        public BeamState(int id) {
+        public BeamButtonState(int id) {
             this.id = id;
         }
 

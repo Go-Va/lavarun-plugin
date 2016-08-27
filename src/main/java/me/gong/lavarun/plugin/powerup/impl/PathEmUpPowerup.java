@@ -57,6 +57,13 @@ public class PathEmUpPowerup extends Powerup {
         return 30;
     }
 
+    @Override
+    public String[] getHelp() {
+        return new String[] {"Right click near the play area to",
+        "begin making a path. Sneak to make the path go",
+        "downwards, jump to make it go up."};
+    }
+
     @EventHandler
     public void onInteract(PlayerInteractEvent ev) {
         GameManager m = InManager.get().getInstance(GameManager.class);

@@ -47,6 +47,12 @@ public class SabotagePowerup extends Powerup {
         return 40;
     }
 
+    @Override
+    public String[] getHelp() {
+        return new String[] {"Break enemy blocks you wouldn't",
+        "normally be able to break!"};
+    }
+
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBreak(PreventBreakEvent ev) {
         GameManager gm = InManager.get().getInstance(GameManager.class);

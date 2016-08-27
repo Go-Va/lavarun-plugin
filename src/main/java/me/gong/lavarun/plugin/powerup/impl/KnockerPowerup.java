@@ -43,6 +43,12 @@ public class KnockerPowerup extends Powerup {
         return 10;
     }
 
+    @Override
+    public String[] getHelp() {
+        return new String[] {"Knocks players backwards extremely far.",
+        "Only works on players not on their side."};
+    }
+
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent ev) {
         GameManager m = InManager.get().getInstance(GameManager.class);

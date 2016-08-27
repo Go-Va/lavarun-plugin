@@ -156,6 +156,14 @@ public class GameEvents implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onMove(PlayerMoveEvent ev) {
+        GameManager gm = InManager.get().getInstance(GameManager.class);
+        Arena currentArena = gm.getCurrentArena();
+        if(!gm.isInGame() || ev.getPlayer().getGameMode() == GameMode.CREATIVE) return;
+        currentArena.getTeam(ev.getPlayer()).updateShop(ev.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent ev) {
         GameManager gm = InManager.get().getInstance(GameManager.class);
         Arena currentArena = gm.getCurrentArena();
@@ -179,6 +187,13 @@ public class GameEvents implements Listener {
         if(gm.isInGame() && ev.getPlayer().getGameMode() == GameMode.SURVIVAL) {
             Location to = ev.getClickedBlock().getLocation();
 
+            if(ev.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                if(currentArena.getTeam(ev.getPlayer()).handleBlockClick(ev.getPlayer(), ev.getClickedBlock().getLocation())) {
+                    ev.setCancelled(true);
+                    return;
+                }
+            }
+
             if(ev.getAction().name().contains("BLOCK")) {
 
                 if(!ev.getAction().name().contains("LEFT")) to = to.clone().add(ev.getBlockFace().getModX(), ev.getBlockFace().getModY(), ev.getBlockFace().getModZ());
@@ -188,10 +203,8 @@ public class GameEvents implements Listener {
                     return;
                 }
             }
-            if(ev.getAction() == Action.PHYSICAL) {
-                currentArena.getTeam(ev.getPlayer()).updateShop(ev.getPlayer());
-                ev.setCancelled(true);
-            }
+
+            if(ev.getAction() == Action.PHYSICAL) ev.setCancelled(true);
         }
     }
 

@@ -8,6 +8,7 @@ import me.gong.lavarun.plugin.timer.Timer;
 import me.gong.lavarun.plugin.util.AxisAlignedBB;
 import me.gong.lavarun.plugin.util.LocationUtils;
 import me.gong.lavarun.plugin.util.NumberUtils;
+import me.gong.lavarun.plugin.util.TimeUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
@@ -58,6 +59,13 @@ public class ExplodeePowerup extends Powerup {
     @Override
     public int getCost() {
         return 80;
+    }
+
+    @Override
+    public String[] getHelp() {
+        return new String[] {"When right clicked, throws a powerful bomb",
+                "If the bomb hits lava, it will instantly explode",
+                "If it lands on a block, it explodes in &e"+ TimeUtils.convertToString(EXPLODE_AFTER)};
     }
 
     @EventHandler
