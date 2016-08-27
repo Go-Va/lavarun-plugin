@@ -11,13 +11,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PowerupManager {
+public class PowerupManager implements Listener {
 
     private static final long MIN_TIME_BETWEEN_POWERUPS = 1000 * 8;
 
@@ -37,6 +38,7 @@ public class PowerupManager {
                 ex.printStackTrace();
             }
         });
+        Bukkit.getPluginManager().registerEvents(this, InManager.get().getInstance(Main.class));
         new BukkitRunnable() {
             @Override
             public void run() {

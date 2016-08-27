@@ -157,7 +157,7 @@ public class LandminePowerup extends Powerup {
             GameManager gm = InManager.get().getInstance(GameManager.class);
             Arena a = gm.getCurrentArena();
             Team t = a.getTeam(player);
-            return a.isPlaying(player, false) && (player.getUniqueId().equals(placer) || !t.getName().equalsIgnoreCase(teamOwner));
+            return a.isPlaying(player, false) && !t.getName().equalsIgnoreCase(teamOwner);
         }
 
         public LandmineData explode() {

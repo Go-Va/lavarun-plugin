@@ -273,7 +273,7 @@ public class Arena {
         gm.spawnPlayer(player, true);
         team.giveKit(player);
         player.sendMessage(ChatColor.GREEN+"You have joined "+team.getColor()+team.getName()+" team");
-        if(timeWithoutEnoughPlayers != 0 && hasEnoughPlayers() != ENOUGH_PLAYERS) {
+        if(timeWithoutEnoughPlayers != 0) {
             timeWithoutEnoughPlayers = 0;
             Bukkit.broadcastMessage(ChatColor.GREEN+"Enough players to resume playing.");
         }
@@ -293,6 +293,7 @@ public class Arena {
         if(gm.isInGame()) {
             player.setGameMode(GameMode.SPECTATOR);
             player.sendMessage(ChatColor.GRAY+"You are spectating this game");
+            player.sendMessage(ChatColor.GRAY+"Type "+ChatColor.GREEN+"/join"+ChatColor.GRAY+" to join the fun!");
         } else player.setGameMode(GameMode.SURVIVAL);
     }
 

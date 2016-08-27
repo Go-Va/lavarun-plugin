@@ -14,6 +14,8 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.material.Leaves;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -31,10 +33,11 @@ public class PointsMinerHandler implements Listener {
     public void createBlock() {
         GameManager gm = InManager.get().getInstance(GameManager.class);
 
-        if(blockExists)
+        if(blockExists) {
             currentBlock.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, currentBlock.getLocation().add(0.5, 0.5, 0.5), 6, 0.5, 0.5, 0.5, 0.3);
-        if(!blockExists && gm.isInGame() && System.currentTimeMillis() - lastSpawn > 1000 * 3) {
-            System.out.println("This is getting called");
+            lastSpawn = System.currentTimeMillis();
+        }
+        if(!blockExists && gm.isInGame() && System.currentTimeMillis() - lastSpawn > 1000 * 60 * 3) {
             Arena c = gm.getCurrentArena();
             World w = c.getPlayArea().getWorld();
             Location min = c.getLavaRegion().getBoxes().get(0).getMinimum(w).clone(),
@@ -87,10 +90,16 @@ public class PointsMinerHandler implements Listener {
                 if(percent <= totalPercent) use.add(spawnables.get(i));
             }
             lastSpawn = System.currentTimeMillis();
-            blockExists = true;
 
             currentBlock = spawnables.get(new Random().nextInt(use.size())).getBlock();
-            Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), () -> currentBlock.setType(Material.LEAVES));
+            Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), () -> {
+                currentBlock.setType(Material.LEAVES);
+                Leaves l = new Leaves(Material.LEAVES);
+                l.setDecayable(false);
+                currentBlock.setData(l.getData());
+                blockExists = true;
+
+            });
         }
     }
 

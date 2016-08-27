@@ -80,7 +80,13 @@ public class BeamManager implements Listener {
         if(this.configuration != null) this.configuration.robot.close();
         this.configuration = configuration;
         this.configuration.initialize();
-        this.configuration.updateStream();
+        {
+            String sl;
+            if ((sl = this.configuration.updateStream()) != null) {
+                Bukkit.broadcastMessage(ChatColor.RED + "Error occurred on Beams side! (" + sl + ")");
+                return;
+            }
+        }
         this.configuration.robot.on(Protocol.Report.class, report -> {
             if(disabling || report == null) return;
             try {
@@ -382,7 +388,7 @@ public class BeamManager implements Listener {
             }
         }
 
-        public void updateStream() {
+        public String updateStream() {
             try {
                 URL url = new URL("https://beam.pro/api/v1/channels/"+user.channel.id);
                 HttpsURLConnection httpCon = (HttpsURLConnection) url.openConnection();
@@ -398,9 +404,12 @@ public class BeamManager implements Listener {
                 obj.put("interactive", true);
                 out.write(obj.toJSONString());
                 out.close();
+                System.out.println(httpCon.getResponseCode()+" "+httpCon.getResponseMessage()+" [channel id: "+user.channel.id+"]");
+                return httpCon.getResponseCode() == 200 ? null : httpCon.getResponseCode()+" "+httpCon.getResponseMessage();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            return null;
         }
 
 

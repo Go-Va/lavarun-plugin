@@ -102,8 +102,8 @@ public class GameTicks {
                 if(gm.redCapAmount >= 3 && gm.blueCapAmount >= 3) {
                     red = NumberUtils.random.nextBoolean();
                 } else red = gm.redCapAmount >= 3;
-                if(!red) gm.stopGame(currentArena.getBlue());
-                else gm.stopGame(currentArena.getRed());
+                Team use = red ? currentArena.getRed() : currentArena.getBlue();
+                Bukkit.getScheduler().runTask(InManager.get().getInstance(Main.class), () -> gm.stopGame(use));
             }
         }
     }
