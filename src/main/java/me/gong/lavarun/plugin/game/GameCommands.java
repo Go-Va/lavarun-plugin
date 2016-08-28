@@ -7,12 +7,18 @@ import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.command.Cmd;
 import me.gong.lavarun.plugin.command.annotation.Command;
 import me.gong.lavarun.plugin.command.annotation.SubCommand;
-import me.gong.lavarun.plugin.shop.ShopManager;
+import me.gong.lavarun.plugin.tutorial.TutorialManager;
+import me.gong.lavarun.plugin.tutorial.data.Tutorial;
+import me.gong.lavarun.plugin.tutorial.usage.builder.TutorialBuilder;
+import me.gong.lavarun.plugin.tutorial.usage.builder.TutorialCreator;
+import me.gong.lavarun.plugin.tutorial.usage.builder.TutorialElement;
 import me.gong.lavarun.plugin.util.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class GameCommands implements Cmd {
@@ -93,10 +99,25 @@ public class GameCommands implements Cmd {
     public boolean onTest(Player player, String[] args) {
         if(hasPerms(player)) {
             GameManager gm = InManager.get().getInstance(GameManager.class);
+            if("".isEmpty()) {
+                gm.loadArenas();
+                return true;
+            }
             if(!gm.getCurrentArena().isPlaying(player, false)) player.sendMessage(ChatColor.RED+"You are not ingame");
             else {
-                ShopManager sm = InManager.get().getInstance(ShopManager.class);
-                sm.setPoints(player, 1000);
+                TutorialCreator.beginPlayer(player, new GameTutorial(),
+                        new TutorialCreator.CreationListener() {
+                            @Override
+                            public void onCreation(Tutorial area) {
+                                player.sendMessage("YAY");
+                                InManager.get().getInstance(TutorialManager.class).displayTutorial(area, player);
+                            }
+
+                            @Override
+                            public void onFail() {
+                                player.sendMessage("RIP");
+                            }
+                        });
             }
             return true;
         } else return true;
@@ -140,6 +161,23 @@ public class GameCommands implements Cmd {
                     }
                 }
             }
+        }
+        return true;
+    }
+
+    @Command(name = "leave", alias = "quit, exit, spectate, spec", help = "Spectates the current game")
+    public boolean onLeaveCmd(Player player, String[] args) {
+        GameManager gm = InManager.get().getInstance(GameManager.class);
+        if(!gm.isInGame()) {
+            player.sendMessage(ChatColor.RED+"No game is currently running");
+            return true;
+        }
+        Team curTeam = gm.getCurrentArena().getTeam(player);
+        if(curTeam == null) player.sendMessage(ChatColor.RED+"Already spectating!");
+        else {
+            player.setGameMode(GameMode.SPECTATOR);
+            gm.getCurrentArena().removePlayer(player);
+            player.sendMessage(ChatColor.GRAY+"You are spectating this game.");
         }
         return true;
     }

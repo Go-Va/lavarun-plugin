@@ -2,6 +2,7 @@ package me.gong.lavarun.plugin.arena;
 
 import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.region.Region;
+import me.gong.lavarun.plugin.tutorial.data.Tutorial;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -20,6 +21,7 @@ public class ArenaBuilder {
     private List<Location> foodSpawn, fireworkSpawns;
     private Team blue, red;
     private Region playArea, lavaRegion, foodRegion;
+    private Tutorial tutorial;
 
     public ArenaBuilder(Player player, String name) {
         this.player = player.getUniqueId();
@@ -60,6 +62,10 @@ public class ArenaBuilder {
         this.teamChooseLocation = teamChooseLocation;
     }
 
+    public void setTutorial(Tutorial tutorial) {
+        this.tutorial = tutorial;
+    }
+
     public void setBlue(Team blue) {
         this.blue = blue;
     }
@@ -93,7 +99,10 @@ public class ArenaBuilder {
     }
 
     public Arena build() {
-        return new Arena(name, foodSpawn, fireworkSpawns, teamChooseLocation, playArea, lavaRegion, foodRegion, blue, red);
+        return new Arena(name, tutorial, foodSpawn, fireworkSpawns, teamChooseLocation, playArea, lavaRegion, foodRegion, blue, red);
     }
 
+    public Tutorial getTutorial() {
+        return tutorial;
+    }
 }

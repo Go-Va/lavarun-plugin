@@ -7,10 +7,7 @@ import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.game.events.DeathEvent;
 import me.gong.lavarun.plugin.game.events.PreventBreakEvent;
-import me.gong.lavarun.plugin.shop.ShopManager;
-import me.gong.lavarun.plugin.util.BukkitUtils;
 import me.gong.lavarun.plugin.util.NumberUtils;
-import me.gong.lavarun.plugin.util.TimeUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -26,7 +23,6 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.scheduler.BukkitRunnable;
 
 public class GameEvents implements Listener {
 
@@ -101,7 +97,7 @@ public class GameEvents implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onFood(FoodLevelChangeEvent ev) {
         GameManager gm = InManager.get().getInstance(GameManager.class);
         if(NumberUtils.random.nextBoolean()) {
@@ -160,7 +156,8 @@ public class GameEvents implements Listener {
         GameManager gm = InManager.get().getInstance(GameManager.class);
         Arena currentArena = gm.getCurrentArena();
         if(!gm.isInGame() || ev.getPlayer().getGameMode() == GameMode.CREATIVE) return;
-        currentArena.getTeam(ev.getPlayer()).updateShop(ev.getPlayer());
+        Team team = currentArena.getTeam(ev.getPlayer());
+        if(team != null) team.updateShop(ev.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)

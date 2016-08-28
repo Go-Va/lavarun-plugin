@@ -18,6 +18,7 @@ import me.gong.lavarun.plugin.scoreboard.ScoreboardHandler;
 import me.gong.lavarun.plugin.scoreboard.ScoreboardManager;
 import me.gong.lavarun.plugin.shop.ShopManager;
 import me.gong.lavarun.plugin.timer.Timers;
+import me.gong.lavarun.plugin.tutorial.TutorialManager;
 import me.gong.lavarun.plugin.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -155,12 +156,12 @@ public class GameManager implements Listener {
         arenas.add(arena);
     }
 
-    private void loadArenas() {
+    public void loadArenas() {
         arenas.clear();
         try(BufferedReader r = new BufferedReader(new FileReader(saveFile))) {
             String line;
             while((line = r.readLine()) != null) {
-                if(!line.isEmpty()) arenas.add(Arena.fromJSON((JSONObject) JSONUtils.parser.parse(line)));
+                arenas.add(Arena.fromJSON((JSONObject) JSONUtils.parser.parse(line)));
             }
         } catch (IOException | ParseException e) {
             e.printStackTrace();
@@ -177,9 +178,9 @@ public class GameManager implements Listener {
 
     public void stopGame(Team winner) {
         if(inGame) {
+            Bukkit.getPluginManager().callEvent(new GameEndEvent());
             resetAll();
             foodMiner.resetBlock();
-            Bukkit.getPluginManager().callEvent(new GameEndEvent());
             for (Player p : Bukkit.getOnlinePlayers()) {
                 setupScoreboard(p);
                 p.setGameMode(GameMode.SURVIVAL);
@@ -225,10 +226,12 @@ public class GameManager implements Listener {
     public void beginGame() {
         Bukkit.broadcastMessage(ChatColor.YELLOW+"The game is now beginning!");
         inGame = true;
-        Bukkit.getPluginManager().callEvent(new GameBeginEvent());
         blueReady = redReady = false;
         Bukkit.getOnlinePlayers().forEach(this::setupPlayer);
         currentArena.resetArena(true, true);
+        Bukkit.getPluginManager().callEvent(new GameBeginEvent());
+        for(Player p : currentArena.getPlaying(true))
+            InManager.get().getInstance(TutorialManager.class).displayTutorial(currentArena.getTutorial(), p);
     }
 
     public void removeArena(Player player, Arena a) {

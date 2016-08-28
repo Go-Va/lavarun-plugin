@@ -4,8 +4,11 @@ import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.arena.team.TeamCreator;
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.arena.team.TeamBuilder;
+import me.gong.lavarun.plugin.game.GameTutorial;
 import me.gong.lavarun.plugin.region.Region;
 import me.gong.lavarun.plugin.region.creation.RegionCreator;
+import me.gong.lavarun.plugin.tutorial.data.Tutorial;
+import me.gong.lavarun.plugin.tutorial.usage.builder.TutorialCreator;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -212,7 +215,22 @@ public class ArenaCreator implements Listener {
                 c.getPlayer().sendMessage(ChatColor.GOLD + "Added firework spawn location");
             }
             return "";
-        }, c -> c.wait = true);
+        }, c -> c.wait = true),
+        TUTORIAL("", "", (c, l, f) -> {
+            if(c.builder.getTutorial() == null) return "";
+            return null;
+        }, c -> TutorialCreator.beginPlayer(c.getPlayer(), new GameTutorial(), new TutorialCreator.CreationListener() {
+            @Override
+            public void onCreation(Tutorial area) {
+                c.builder.setTutorial(area);
+                c.onClick(null, null);
+            }
+
+            @Override
+            public void onFail() {
+                c.cancel(false);
+            }
+        }));
 
 
         private final String instruction;

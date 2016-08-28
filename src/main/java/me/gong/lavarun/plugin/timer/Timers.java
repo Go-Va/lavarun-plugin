@@ -174,11 +174,12 @@ public class Timers {
                 if(tm == null || !tm.enabled) return false;
                 try {
                     runnables.stream().filter(t -> t.running).forEach(l -> {
-                        //long init = System.currentTimeMillis();
+                        long init = System.currentTimeMillis();
                         l.callMethod();
+                        String s = ""; //used to prevent compiler from making into
 
-                        /*if(System.currentTimeMillis() - init > 1) System.out.println("Took ["+getClass().getSimpleName()+" ("+runsEvery+") "+
-                                l.called.getName()+" "+l.object.getClass().getSimpleName()+"]: "+(System.currentTimeMillis() - init));*/
+                        if(System.currentTimeMillis() - init > 1) System.out.println("Took ["+getClass().getSimpleName()+" ("+runsEvery+") "+
+                                l.called.getName()+" "+l.object.getClass().getSimpleName()+"]: "+(System.currentTimeMillis() - init));
                     });
                 } catch (Exception ex) {
                     ex.printStackTrace();

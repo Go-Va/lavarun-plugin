@@ -5,8 +5,10 @@ import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.arena.team.Team;
 import me.gong.lavarun.plugin.game.GameManager;
 import me.gong.lavarun.plugin.game.events.ArenaResetEvent;
+import me.gong.lavarun.plugin.game.events.PlayerJoinTeamEvent;
 import me.gong.lavarun.plugin.game.events.PreventBreakEvent;
 import me.gong.lavarun.plugin.region.Region;
+import me.gong.lavarun.plugin.tutorial.data.Tutorial;
 import me.gong.lavarun.plugin.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -34,9 +36,11 @@ public class Arena {
 
     private List<GameManager.RespawnData> respawnData;
     private long timeWithoutEnoughPlayers;
+    private Tutorial tutorial;
 
-    public Arena(String name, List<Location> foodSpawn, List<Location> fireworkSpawn, Location teamChooseLocation, Region playArea, Region lavaRegion, Region foodRegion, Team blue, Team red) {
+    public Arena(String name, Tutorial tutorial, List<Location> foodSpawn, List<Location> fireworkSpawn, Location teamChooseLocation, Region playArea, Region lavaRegion, Region foodRegion, Team blue, Team red) {
         this.name = name;
+        this.tutorial = tutorial;
         this.fireworkSpawns = fireworkSpawn;
         this.playArea = playArea;
         this.foodSpawn = foodSpawn;
@@ -91,7 +95,7 @@ public class Arena {
 
         playArea.getBlocks().forEach(l -> {
             Block b = l.getBlock();
-            if(b.getTypeId() == Material.STAINED_GLASS.getId()) b.setType(Material.AIR);
+            if(b.getTypeId() == Material.STAINED_GLASS.getId() || (fullReset && b.getType() == Material.LEAVES)) b.setType(Material.AIR);
         });
 
         Bukkit.getPluginManager().callEvent(new ArenaResetEvent());
@@ -272,6 +276,7 @@ public class Arena {
         team.addPlayer(player);
         gm.spawnPlayer(player, true);
         team.giveKit(player);
+        Bukkit.getPluginManager().callEvent(new PlayerJoinTeamEvent(player, team));
         player.sendMessage(ChatColor.GREEN+"You have joined "+team.getColor()+team.getName()+" team");
         if(timeWithoutEnoughPlayers != 0) {
             timeWithoutEnoughPlayers = 0;
@@ -305,8 +310,12 @@ public class Arena {
         player.setFireTicks(0);
         player.setFoodLevel(20);
         player.setSaturation(5);
+        if(!InManager.get().getInstance(GameManager.class).isInGame()) return;
         int playerState = hasEnoughPlayers();
-        if(playerState == NO_PLAYERS) InManager.get().getInstance(GameManager.class).stopGame((Team) null);
+        if(playerState == NO_PLAYERS) {
+            InManager.get().getInstance(GameManager.class).stopGame((Team) null);
+            Bukkit.broadcastMessage(ChatColor.RED+"No players in-game. Ending game.");
+        }
         else if(playerState == ONE_SIDED) {
             timeWithoutEnoughPlayers = System.currentTimeMillis();
             Bukkit.broadcastMessage(ChatColor.RED+"Not enough players to play. Game ends in "+ChatColor.YELLOW+TimeUtils.convertToString(ONE_SIDED_TIMEOUT));
@@ -314,7 +323,7 @@ public class Arena {
     }
 
     public boolean isPlaying(Player player, boolean ignoreRespawning) {
-        return (blue.isOnTeam(player) || red.isOnTeam(player)) && ignoreRespawning || getRespawnData(player) == null;
+        return (blue.isOnTeam(player) || red.isOnTeam(player)) && (ignoreRespawning || getRespawnData(player) == null);
     }
 
     public Team getTeam(Player player) {
@@ -354,6 +363,7 @@ public class Arena {
         obj.put("lavaRegion", lavaRegion.toJSON());
         obj.put("foodRegion", foodRegion.toJSON());
         obj.put("teamChooseLocation", JSONUtils.locationToJSON(teamChooseLocation));
+        obj.put("tutorial", tutorial.toJSON());
         return obj;
     }
 
@@ -368,12 +378,17 @@ public class Arena {
         List<Location> foodSpawn = (List<Location>) food.stream().map(s -> JSONUtils.locationFromJSON((JSONObject)s)).collect(Collectors.toList());
         JSONArray fw = (JSONArray) obj.get("fireworkSpawns");
         List<Location> fireworkSpawns = (List<Location>) fw.stream().map(s -> JSONUtils.locationFromJSON((JSONObject)s)).collect(Collectors.toList());
+        Tutorial t = Tutorial.fromJSON((JSONArray) obj.get("tutorial"));
 
-        return new Arena(name, foodSpawn, fireworkSpawns, teamChooseLocation, playArea, lavaReigon, foodRegion, blue, red);
+        return new Arena(name, t, foodSpawn, fireworkSpawns, teamChooseLocation, playArea, lavaReigon, foodRegion, blue, red);
 
     }
 
     public List<Player> getPlaying(boolean ignoreRespawning) {
         return Bukkit.getOnlinePlayers().stream().filter(p -> isPlaying(p, ignoreRespawning)).collect(Collectors.toList());
+    }
+
+    public Tutorial getTutorial() {
+        return tutorial;
     }
 }

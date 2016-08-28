@@ -12,7 +12,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 public class BeamCmd implements Cmd {
-    @Command(name = "beam", help = "Main beam command")
+    @Command(name = "beam", alias = "b", help = "Main beam command")
     public boolean onCmd(Player player, String[] args) {
         return !hasPerms(player);
     }

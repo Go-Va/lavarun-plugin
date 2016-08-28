@@ -3,6 +3,7 @@ package me.gong.lavarun.plugin.shop;
 import me.gong.lavarun.plugin.InManager;
 import me.gong.lavarun.plugin.Main;
 import me.gong.lavarun.plugin.game.GameManager;
+import me.gong.lavarun.plugin.shop.events.SetPointsEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,7 +28,10 @@ public class ShopManager implements Listener {
     }
 
     public void setPoints(Player player, int points) {
-        this.points.put(player.getUniqueId(), points);
+
+        SetPointsEvent ev = new SetPointsEvent(player, points);
+        Bukkit.getPluginManager().callEvent(ev);
+        if(!ev.isCancelled()) this.points.put(player.getUniqueId(), ev.getAmount());
     }
 
     public void addPoints(Player player, int amount) {

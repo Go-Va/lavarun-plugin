@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class PointsMinerHandler implements Listener {
 
     public static final int ADDED_POINTS = 45;
+    public static final long RUN_EVERY = 1000 * 60 * 3;
 
     private Block currentBlock;
     private long lastSpawn;
@@ -37,7 +38,7 @@ public class PointsMinerHandler implements Listener {
             currentBlock.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, currentBlock.getLocation().add(0.5, 0.5, 0.5), 6, 0.5, 0.5, 0.5, 0.3);
             lastSpawn = System.currentTimeMillis();
         }
-        if(!blockExists && gm.isInGame() && System.currentTimeMillis() - lastSpawn > 1000 * 60 * 3) {
+        if(!blockExists && gm.isInGame() && System.currentTimeMillis() - lastSpawn >= RUN_EVERY) {
             Arena c = gm.getCurrentArena();
             World w = c.getPlayArea().getWorld();
             Location min = c.getLavaRegion().getBoxes().get(0).getMinimum(w).clone(),
