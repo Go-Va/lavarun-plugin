@@ -77,8 +77,8 @@ public class GameManager implements Listener {
             "Make %damager rue the day it thought it could give %victim lemons! Do you know who I am? I'm the man who's going to burn your house down! With the lemons! I'm going to get my engineers to invent a combustible lemon that burns your house down.",
             "%damager, now please bring %victim some pain pills.",
             "%victim are you trying to test %damager?",
-            "Well done. Here come the test results: You are a horrible person, %damager. I'm serious, that's what it says: You killer %victim. We weren't even testing for that",
-            "You don't have to test with the %victim, %damager. It's garbage"};
+            "Well done. Here come the test results: You are a horrible person, %damager. I'm serious, that's what it says: You killed %victim. We weren't even testing for that",
+            "You don't have to test with the %victim, %damager. He's garbage"};
 
     public static final String[] STUPID_SELF = new String[] {"%player was dumb."};
 
